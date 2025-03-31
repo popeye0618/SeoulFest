@@ -71,4 +71,8 @@ public class Member extends BaseEntity {
 	public void setBirthDay(LocalDate birthDay) {
 		this.birthDay = birthDay;
 	}
+
+	public void setEmail(String email) {
+		this.email = email;
+	}
 }
