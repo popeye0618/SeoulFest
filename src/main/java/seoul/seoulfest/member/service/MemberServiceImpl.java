@@ -5,6 +5,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
 import seoul.seoulfest.auth.custom.CustomUserDetails;
+import seoul.seoulfest.auth.dto.LoginDto;
 import seoul.seoulfest.auth.exception.AuthErrorCode;
 import seoul.seoulfest.exception.BusinessException;
 import seoul.seoulfest.member.dto.request.InputFeatureReq;
@@ -44,8 +45,16 @@ public class MemberServiceImpl implements MemberService{
 
 		jwtTokenProvider.deleteRefreshToken(currentMember.getVerifyId());
 
-		String accessToken = jwtTokenProvider.generateAccessToken(userDetails);
-		String refreshToken = jwtTokenProvider.generateRefreshToken(userDetails);
+		LoginDto updatedLoginDto = LoginDto.builder()
+			.verifyId(currentMember.getVerifyId())
+			.role(currentMember.getRole().name())
+			.email(currentMember.getEmail())
+			.build();
+
+		CustomUserDetails updatedUserDetails = CustomUserDetails.create(updatedLoginDto);
+
+		String accessToken = jwtTokenProvider.generateAccessToken(updatedUserDetails);
+		String refreshToken = jwtTokenProvider.generateRefreshToken(updatedUserDetails);
 
 		return InputFeatureRes.builder()
 			.accessToken(accessToken)
