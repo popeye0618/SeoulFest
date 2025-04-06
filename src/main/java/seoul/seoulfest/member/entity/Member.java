@@ -20,6 +20,9 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import seoul.seoulfest.board.entity.Post;
+import seoul.seoulfest.board.entity.PostComment;
+import seoul.seoulfest.board.entity.PostLike;
 import seoul.seoulfest.event.entity.EventComment;
 import seoul.seoulfest.event.entity.EventFavorite;
 import seoul.seoulfest.event.entity.EventLike;
@@ -65,6 +68,15 @@ public class Member extends BaseEntity {
 	@OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
 	private List<EventFavorite> eventFavorites = new ArrayList<>();
 
+	@OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
+	private List<Post> posts = new ArrayList<>();
+
+	@OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
+	private List<PostComment> postComments = new ArrayList<>();
+
+	@OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
+	private List<PostLike> postLikes = new ArrayList<>();
+
 	@Builder
 	public Member(String verifyId, String username, String email, Role role, String gender, LocalDate birthDay) {
 		this.verifyId = verifyId;
@@ -86,6 +98,7 @@ public class Member extends BaseEntity {
 
 	public void removeEventComment(EventComment eventComment) {
 		this.eventComments.remove(eventComment);
+		eventComment.setMember(null);
 	}
 
 	public void addEventLike(EventLike eventLike) {
@@ -94,6 +107,7 @@ public class Member extends BaseEntity {
 
 	public void removeEventLike(EventLike eventLike) {
 		this.eventLikes.remove(eventLike);
+		eventLike.setMember(null);
 	}
 
 	public void addEventFavorite(EventFavorite eventFavorite) {
@@ -102,5 +116,42 @@ public class Member extends BaseEntity {
 
 	public void removeEventFavorite(EventFavorite eventFavorite) {
 		this.eventFavorites.remove(eventFavorite);
+		eventFavorite.setMember(null);
 	}
+
+	// 연관관계 편의 메서드: Post 추가
+	public void addPost(Post post) {
+		posts.add(post);
+		post.setMember(this);
+	}
+
+	// 연관관계 편의 메서드: Post 제거
+	public void removePost(Post post) {
+		posts.remove(post);
+		post.setMember(null);
+	}
+
+	// 연관관계 편의 메서드: PostComment 추가
+	public void addPostComment(PostComment postComment) {
+		postComments.add(postComment);
+		postComment.setMember(this);
+	}
+
+	// 연관관계 편의 메서드: PostComment 제거
+	public void removePostComment(PostComment postComment) {
+		postComments.remove(postComment);
+		postComment.setMember(null);
+	}
+
+	public void addPostLike(PostLike postLike) {
+		postLikes.add(postLike);
+		postLike.setMember(this);
+	}
+
+
+	public void removePostLike(PostLike postLike) {
+		postLikes.remove(postLike);
+		postLike.setMember(null);
+	}
+
 }
