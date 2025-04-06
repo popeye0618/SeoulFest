@@ -37,6 +37,7 @@ public class EventFavoriteServiceImpl implements EventFavoriteService{
 			.build();
 
 		currentMember.addEventFavorite(eventFavorite);
+		event.addEventFavorite(eventFavorite);
 		eventFavoriteRepository.save(eventFavorite);
 	}
 
@@ -51,6 +52,7 @@ public class EventFavoriteServiceImpl implements EventFavoriteService{
 			.orElseThrow(() -> new BusinessException(EventErrorCode.NOT_EXIST_FAVORITE));
 
 		currentMember.removeEventFavorite(eventFavorite);
+		event.removeEventFavorite(eventFavorite);
 		eventFavoriteRepository.delete(eventFavorite);
 	}
 

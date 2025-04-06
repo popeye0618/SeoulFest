@@ -108,9 +108,18 @@ public class EventCommentServiceImpl implements EventCommentService {
 		EventComment comment = eventCommentRepository.findById(commentId)
 			.orElseThrow(() -> new BusinessException(EventErrorCode.NOT_EXIST_COMMENT));
 
+		EventComment parentComment = getParentComment(commentId);
+
 		Member currentMember = validateWriter(comment);
 
 		currentMember.removeEventComment(comment);
+
+		if (parentComment != null) {
+			parentComment.removeReply(comment);
+		} else {
+			comment.getEvent().removeEventComment(comment);
+		}
+
 		eventCommentRepository.delete(comment);
 	}
 

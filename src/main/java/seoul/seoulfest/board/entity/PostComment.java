@@ -1,4 +1,4 @@
-package seoul.seoulfest.event.entity;
+package seoul.seoulfest.board.entity;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,7 +24,7 @@ import seoul.seoulfest.util.BaseEntity;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class EventComment extends BaseEntity {
+public class PostComment extends BaseEntity {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -32,42 +32,41 @@ public class EventComment extends BaseEntity {
 	private Long id;
 
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "event_id", nullable = false)
+	@JoinColumn(name = "post_id", nullable = false)
 	@Setter
-	private Event event;
+	private Post post;
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "member_id", nullable = false)
 	@Setter
 	private Member member;
 
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "parent_comment_id")
+	@Setter
+	private PostComment parent;
+
 	@Column(columnDefinition = "TEXT")
 	@Setter
 	private String content;
 
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "parent_comment_id")
-	@Setter
-	private EventComment parent;
-
 	@OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, orphanRemoval = true)
-	private List<EventComment> replies = new ArrayList<>();
+	private List<PostComment> replies = new ArrayList<>();
 
 	@Builder
-	public EventComment(Event event, Member member, String content, EventComment parent) {
-		this.event = event;
+	public PostComment(Post post, Member member, PostComment parent, String content) {
+		this.post = post;
 		this.member = member;
-		this.content = content;
 		this.parent = parent;
+		this.content = content;
 	}
 
-	// 연관관계 편의 메서드: 부모 댓글에 대댓글을 추가하고, 대댓글의 parent 필드도 설정
-	public void addReply(EventComment reply) {
+	// 연관관계 편의 메서드: 자식 댓글 추가
+	public void addReply(PostComment reply) {
 		this.replies.add(reply);
-		reply.setParent(this);
 	}
 
-	public void removeReply(EventComment reply) {
+	public void removeReply(PostComment reply) {
 		this.replies.remove(reply);
 	}
 }

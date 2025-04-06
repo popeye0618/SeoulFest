@@ -34,12 +34,17 @@ public class EventLikeServiceImpl implements EventLikeService {
 		Event event = eventRepository.findById(eventId)
 			.orElseThrow(() -> new BusinessException(EventErrorCode.NOT_EXIST_EVENT));
 
+		if (eventLikeRepository.existsByEventAndMember(event, currentMember)) {
+			throw new BusinessException(EventErrorCode.ALREADY_LIKED);
+		}
+
 		EventLike eventLike = EventLike.builder()
 			.member(currentMember)
 			.event(event)
 			.build();
 
 		currentMember.addEventLike(eventLike);
+		event.addEventLike(eventLike);
 		eventLikeRepository.save(eventLike);
 	}
 
@@ -60,6 +65,7 @@ public class EventLikeServiceImpl implements EventLikeService {
 			.orElseThrow(() -> new BusinessException(EventErrorCode.NOT_EXIST_LIKE));
 
 		currentMember.removeEventLike(eventLike);
+		event.removeEventLike(eventLike);
 		eventLikeRepository.delete(eventLike);
 	}
 }

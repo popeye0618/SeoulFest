@@ -149,6 +149,28 @@ public class Event extends BaseEntity {
 	// 연관관계 편의 메서드: 댓글을 이벤트에 추가하고, 댓글의 event 필드도 설정
 	public void addEventComment(EventComment comment) {
 		this.eventComments.add(comment);
-		comment.assignEvent(this);  // 아래 assignEvent() 메서드 사용
+	}
+
+	public void removeEventComment(EventComment eventComment) {
+		this.eventComments.remove(eventComment);
+		eventComment.setEvent(null);
+	}
+
+	public void addEventLike(EventLike eventLike) {
+		this.eventLikes.add(eventLike);
+	}
+
+	public void removeEventLike(EventLike eventLike) {
+		this.eventLikes.remove(eventLike);
+		eventLike.setMember(null);
+	}
+
+	public void addEventFavorite(EventFavorite eventFavorite) {
+		this.eventFavorites.add(eventFavorite);
+	}
+
+	public void removeEventFavorite(EventFavorite eventFavorite) {
+		this.eventFavorites.remove(eventFavorite);
+		eventFavorite.setMember(null);
 	}
 }

@@ -1,4 +1,4 @@
-package seoul.seoulfest.event.entity;
+package seoul.seoulfest.board.entity;
 
 import java.time.LocalDateTime;
 
@@ -18,21 +18,21 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import seoul.seoulfest.member.entity.Member;
+import seoul.seoulfest.util.BaseEntity;
 
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class EventLike {
-
+public class PostLike {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "like_id")
 	private Long id;
 
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "event_id", nullable = false)
+	@JoinColumn(name = "post_id", nullable = false)
 	@Setter
-	private Event event;
+	private Post post;
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "member_id", nullable = false)
@@ -44,8 +44,8 @@ public class EventLike {
 	private LocalDateTime createdAt;
 
 	@Builder
-	public EventLike(Event event, Member member) {
-		this.event = event;
+	public PostLike(Post post, Member member) {
+		this.post = post;
 		this.member = member;
 	}
 }

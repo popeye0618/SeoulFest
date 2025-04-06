@@ -1,8 +1,4 @@
-package seoul.seoulfest.event.entity;
-
-import java.time.LocalDateTime;
-
-import org.hibernate.annotations.CreationTimestamp;
+package seoul.seoulfest.board.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -17,35 +13,29 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import seoul.seoulfest.member.entity.Member;
+import seoul.seoulfest.util.BaseEntity;
 
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class EventLike {
+public class PostMedia extends BaseEntity {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "like_id")
+	@Column(name = "media_id")
 	private Long id;
 
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "event_id", nullable = false)
+	@JoinColumn(name = "post_id", nullable = false)
 	@Setter
-	private Event event;
+	private Post post;
 
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "member_id", nullable = false)
-	@Setter
-	private Member member;
-
-	@CreationTimestamp
-	@Column(name = "created_at", nullable = false, updatable = false)
-	private LocalDateTime createdAt;
+	@Column(name = "s3_key")
+	private String s3Key;
 
 	@Builder
-	public EventLike(Event event, Member member) {
-		this.event = event;
-		this.member = member;
+	public PostMedia(Post post, String s3Key) {
+		this.post = post;
+		this.s3Key = s3Key;
 	}
 }
