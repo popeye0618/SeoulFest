@@ -33,10 +33,12 @@ public class EventComment extends BaseEntity {
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "event_id", nullable = false)
+	@Setter
 	private Event event;
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "member_id", nullable = false)
+	@Setter
 	private Member member;
 
 	@Column(columnDefinition = "TEXT")
@@ -59,14 +61,13 @@ public class EventComment extends BaseEntity {
 		this.parent = parent;
 	}
 
-	// 연관관계 편의 메서드: 이벤트와의 관계 설정 (내부에서만 사용)
-	protected void assignEvent(Event event) {
-		this.event = event;
-	}
-
 	// 연관관계 편의 메서드: 부모 댓글에 대댓글을 추가하고, 대댓글의 parent 필드도 설정
 	public void addReply(EventComment reply) {
 		this.replies.add(reply);
 		reply.setParent(this);
+	}
+
+	public void removeReply(EventComment reply) {
+		this.replies.remove(reply);
 	}
 }

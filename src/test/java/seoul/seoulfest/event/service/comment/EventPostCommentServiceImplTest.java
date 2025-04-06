@@ -29,7 +29,7 @@ import seoul.seoulfest.member.entity.Member;
 import seoul.seoulfest.util.security.SecurityUtil;
 
 @ExtendWith(MockitoExtension.class)
-class EventCommentServiceImplTest {
+class EventPostCommentServiceImplTest {
 
 	@Mock
 	private SecurityUtil securityUtil;

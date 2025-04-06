@@ -24,7 +24,7 @@ import seoul.seoulfest.util.response.Response;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/auth/user")
+@RequestMapping("/api/auth/user/event")
 public class EventCommentController {
 
 	private final EventCommentService eventCommentService;

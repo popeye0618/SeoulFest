@@ -13,4 +13,6 @@ import seoul.seoulfest.member.entity.Member;
 public interface EventLikeRepository extends JpaRepository<EventLike, Long> {
 
 	Optional<EventLike> findByEventAndMember(Event event, Member member);
+
+	boolean existsByEventAndMember(Event event, Member member);
 }

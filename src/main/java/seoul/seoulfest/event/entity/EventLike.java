@@ -16,6 +16,7 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import seoul.seoulfest.member.entity.Member;
 
 @Entity
@@ -30,10 +31,12 @@ public class EventLike {
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "event_id", nullable = false)
+	@Setter
 	private Event event;
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "member_id", nullable = false)
+	@Setter
 	private Member member;
 
 	@CreationTimestamp
