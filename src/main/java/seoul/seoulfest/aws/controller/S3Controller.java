@@ -1,4 +1,4 @@
-package seoul.seoulfest.board.controller.media;
+package seoul.seoulfest.aws.controller;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import lombok.RequiredArgsConstructor;
-import seoul.seoulfest.board.service.media.S3Service;
+import seoul.seoulfest.aws.service.S3Service;
 import seoul.seoulfest.board.dto.media.response.PresignedUrlResponse;
 import seoul.seoulfest.util.response.Response;
 

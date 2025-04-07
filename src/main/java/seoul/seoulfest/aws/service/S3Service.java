@@ -1,4 +1,4 @@
-package seoul.seoulfest.board.service.media;
+package seoul.seoulfest.aws.service;
 
 import seoul.seoulfest.board.dto.media.response.PresignedUrlResponse;
 
