@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
+import seoul.seoulfest.aws.service.S3Service;
 import seoul.seoulfest.board.entity.Post;
 import seoul.seoulfest.board.entity.PostMedia;
 import seoul.seoulfest.board.repository.PostMediaRepository;

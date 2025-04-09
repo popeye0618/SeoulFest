@@ -30,4 +30,9 @@ public class SecurityUtil {
 		throw new BusinessException(AuthErrorCode.USER_NOT_FOUND);
 	}
 
+	public Member getCurrentMember(String verifyId) {
+		return memberRepository.findByVerifyId(verifyId)
+			.orElseThrow(() -> new BusinessException(AuthErrorCode.USER_NOT_FOUND));
+	}
+
 }

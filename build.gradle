@@ -33,6 +33,11 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-websocket'
+    // STOMP 메시징 지원
+    implementation 'org.springframework.boot:spring-boot-starter-reactor-netty'
+    // 메시지 JSON 변환
+    implementation 'com.fasterxml.jackson.core:jackson-databind'
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
     implementation 'org.jsoup:jsoup:1.15.3'
     implementation 'io.jsonwebtoken:jjwt-api:0.11.2'
     implementation 'org.springframework.cloud:spring-cloud-starter-aws:2.2.6.RELEASE'

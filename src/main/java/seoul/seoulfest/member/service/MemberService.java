@@ -4,6 +4,7 @@ import seoul.seoulfest.auth.custom.CustomUserDetails;
 import seoul.seoulfest.member.dto.request.InputFeatureReq;
 import seoul.seoulfest.member.dto.request.UpdateFeatureReq;
 import seoul.seoulfest.member.dto.response.InputFeatureRes;
+import seoul.seoulfest.member.dto.response.MemberInfoRes;
 
 public interface MemberService {
 
@@ -21,4 +22,6 @@ public interface MemberService {
 	 * @param request 새 유저 정보
 	 */
 	void updateFeature(UpdateFeatureReq request);
+
+	MemberInfoRes getMemberInfo();
 }

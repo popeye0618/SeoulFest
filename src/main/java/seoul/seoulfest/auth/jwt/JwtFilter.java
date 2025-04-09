@@ -33,7 +33,8 @@ public class JwtFilter extends OncePerRequestFilter {
 		"/api/register",
 		"/api/login",
 		"/api/token/exchange",
-		"/api/token/refresh"
+		"/api/token/refresh",
+		"/ws-stomp/**"
 	);
 
 	private final JwtTokenProvider jwtTokenProvider;
@@ -43,7 +44,8 @@ public class JwtFilter extends OncePerRequestFilter {
 		FilterChain filterChain) throws ServletException, IOException {
 
 		log.info("requestURI={}", request.getRequestURI());
-		if (WHITELIST.contains(request.getRequestURI())) {
+		String requestURI = request.getRequestURI();
+		if (isWhitelisted(requestURI)) {
 			filterChain.doFilter(request, response);
 			return;
 		}
@@ -53,6 +55,23 @@ public class JwtFilter extends OncePerRequestFilter {
 		}
 
 		filterChain.doFilter(request, response);
+	}
+
+	// 화이트리스트 URL 패턴 매칭 메서드 추가
+	private boolean isWhitelisted(String requestURI) {
+		// 정확히 일치하는 경우
+		if (WHITELIST.contains(requestURI)) {
+			return true;
+		}
+
+		// 와일드카드 패턴 매칭 (/ws-stomp/**)
+		for (String pattern : WHITELIST) {
+			if (pattern.endsWith("/**") && requestURI.startsWith(pattern.substring(0, pattern.length() - 2))) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	/**
