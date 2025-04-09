@@ -2,6 +2,7 @@ package seoul.seoulfest.member.controller;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -13,6 +14,7 @@ import seoul.seoulfest.auth.custom.CustomUserDetails;
 import seoul.seoulfest.member.dto.request.InputFeatureReq;
 import seoul.seoulfest.member.dto.request.UpdateFeatureReq;
 import seoul.seoulfest.member.dto.response.InputFeatureRes;
+import seoul.seoulfest.member.dto.response.MemberInfoRes;
 import seoul.seoulfest.member.service.MemberService;
 import seoul.seoulfest.util.response.Response;
 import seoul.seoulfest.util.security.SecurityUtil;
@@ -51,5 +53,11 @@ public class MemberController {
 		return Response.ok().toResponseEntity();
 	}
 
+	@GetMapping("/auth/user/info")
+	public ResponseEntity<Response<MemberInfoRes>> getInfo() {
+		MemberInfoRes memberInfoRes = memberService.getMemberInfo();
+
+		return Response.ok(memberInfoRes).toResponseEntity();
+	}
 
 }

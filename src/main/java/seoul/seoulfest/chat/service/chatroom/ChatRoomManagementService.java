@@ -6,8 +6,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
-import seoul.seoulfest.chat.dto.request.CreateChatRoomReq;
-import seoul.seoulfest.chat.dto.request.UpdateChatRoomReq;
+import seoul.seoulfest.chat.dto.request.chatroom.CreateChatRoomReq;
+import seoul.seoulfest.chat.dto.request.chatroom.UpdateChatRoomReq;
 import seoul.seoulfest.chat.entity.ChatRoom;
 import seoul.seoulfest.chat.entity.ChatRoomMember;
 import seoul.seoulfest.chat.enums.ChatRole;

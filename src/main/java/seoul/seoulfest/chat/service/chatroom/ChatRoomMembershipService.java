@@ -7,7 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
 import seoul.seoulfest.auth.exception.AuthErrorCode;
-import seoul.seoulfest.chat.dto.request.InviteChatRoomReq;
+import seoul.seoulfest.chat.dto.request.chatroom.InviteChatRoomReq;
 import seoul.seoulfest.chat.entity.ChatRoom;
 import seoul.seoulfest.chat.entity.ChatRoomMember;
 import seoul.seoulfest.chat.enums.ChatRole;

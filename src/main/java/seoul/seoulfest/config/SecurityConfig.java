@@ -31,13 +31,15 @@ import seoul.seoulfest.util.jwt.JwtTokenProvider;
 public class SecurityConfig {
 
 	private static final List<String> CORS_WHITELIST = List.of(
-		"http://localhost:5173"
+		"http://localhost:5173",
+		"http://127.0.0.1:5500"
 	);
 	private static final List<String> WHITELIST = List.of(
 		"/login",
 		"/api/register",
 		"/api/login",
-		"/api/token/**"
+		"/api/token/**",
+		"/ws-stomp/**"
 	);
 
 	private final CustomOAuth2UserService customOAuth2UserService;

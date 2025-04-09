@@ -1,4 +1,4 @@
-package seoul.seoulfest.chat.dto.request;
+package seoul.seoulfest.chat.dto.request.chatroom;
 
 import lombok.Builder;
 import lombok.Getter;

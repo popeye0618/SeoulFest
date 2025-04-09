@@ -2,9 +2,9 @@ package seoul.seoulfest.chat.service.chatroom;
 
 import org.springframework.data.domain.Page;
 
-import seoul.seoulfest.chat.dto.request.CreateChatRoomReq;
-import seoul.seoulfest.chat.dto.request.InviteChatRoomReq;
-import seoul.seoulfest.chat.dto.request.UpdateChatRoomReq;
+import seoul.seoulfest.chat.dto.request.chatroom.CreateChatRoomReq;
+import seoul.seoulfest.chat.dto.request.chatroom.InviteChatRoomReq;
+import seoul.seoulfest.chat.dto.request.chatroom.UpdateChatRoomReq;
 import seoul.seoulfest.chat.dto.response.ChatRoomRes;
 import seoul.seoulfest.chat.dto.response.MyChatRoomRes;
 

@@ -11,6 +11,7 @@ import seoul.seoulfest.exception.BusinessException;
 import seoul.seoulfest.member.dto.request.InputFeatureReq;
 import seoul.seoulfest.member.dto.request.UpdateFeatureReq;
 import seoul.seoulfest.member.dto.response.InputFeatureRes;
+import seoul.seoulfest.member.dto.response.MemberInfoRes;
 import seoul.seoulfest.member.entity.Member;
 import seoul.seoulfest.member.enums.Role;
 import seoul.seoulfest.member.repository.MemberRepository;
@@ -92,5 +93,18 @@ public class MemberServiceImpl implements MemberService{
 		member.setGender(request.getGender());
 		member.setBirthDay(request.getBirthday());
 		member.setEmail(request.getEmail());
+	}
+
+	@Override
+	public MemberInfoRes getMemberInfo() {
+
+		Member member = securityUtil.getCurrentMember();
+
+		return MemberInfoRes.builder()
+			.verifyId(member.getVerifyId())
+			.username(member.getUsername())
+			.gender(member.getGender())
+			.email(member.getEmail())
+			.build();
 	}
 }
