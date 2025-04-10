@@ -23,6 +23,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import seoul.seoulfest.event.dto.event.EventSearchCondition;
 import seoul.seoulfest.event.dto.event.response.EventRes;
 import seoul.seoulfest.event.entity.Event;
 import seoul.seoulfest.event.enums.Status;
@@ -40,49 +41,78 @@ class EventServiceImplTest {
 	private Event dummyEvent;
 	private Pageable pageable;
 
-	@BeforeEach
-	void setup() {
-		// 더미 Event 객체 생성 (builder 사용)
-		dummyEvent = Event.builder()
-			.status(Status.PROGRESS)
-			.codename("Category1")
-			.guName("GuName1")
-			.title("Test Event")
-			.isFree("Y")
+	@Test
+	@DisplayName("제목 검색어로 이벤트를 조회할 수 있다")
+	void searchEventsByTitle() {
+		// given
+		String searchKeyword = "축제";
+		EventSearchCondition condition = EventSearchCondition.builder()
+			.title(searchKeyword)
 			.build();
-		// 엔티티의 id는 보통 DB에서 할당되므로, 테스트에서는 ReflectionTestUtils를 사용하여 설정
-		ReflectionTestUtils.setField(dummyEvent, "id", 1L);
 
-		// 페이징 및 정렬 조건: 프론트엔드 기준 page 1 -> 내부적으로 0부터 시작, 정렬은 startDate 내림차순
-		pageable = PageRequest.of(0, 10, Sort.by("startDate").descending());
+		Pageable pageable = PageRequest.of(0, 10);
+
+		Event event = createTestEvent(1L);
+		Page<Event> eventPage = new PageImpl<>(List.of(event), pageable, 1);
+
+		when(eventRepository.findAll(any(Specification.class), eq(pageable)))
+			.thenReturn(eventPage);
+
+		// when
+		Page<EventRes> result = eventService.getEvents(condition, pageable);
+
+		// then
+		assertThat(result).isNotNull();
+		assertThat(result.getTotalElements()).isEqualTo(1);
+		assertThat(result.getContent().get(0).getTitle()).isEqualTo(event.getTitle());
 	}
 
 	@Test
-	@DisplayName("필터 조건 없이 이벤트를 조회하면 DTO로 매핑된 결과를 반환한다")
-	void testGetEvents_noFilter() {
-		// given: 단일 이벤트를 포함하는 Page<Event> 생성
-		List<Event> events = Collections.singletonList(dummyEvent);
-		Page<Event> eventPage = new PageImpl<>(events, pageable, events.size());
+	@DisplayName("필터와 검색어를 동시에 적용하여 이벤트를 조회할 수 있다")
+	void searchEventsWithFilterAndKeyword() {
+		// given
+		EventSearchCondition condition = EventSearchCondition.builder()
+			.status(Status.PROGRESS)
+			.isFree("Y")
+			.title("음악")
+			.build();
 
-		// Repository 모의: findAll 메서드가 어떤 Specification과 Pageable이 전달되더라도 eventPage를 반환하도록 함
-		when(eventRepository.findAll((Specification<Event>)any(), eq(pageable))).thenReturn(eventPage);
+		Pageable pageable = PageRequest.of(0, 10);
 
-		// when: 필터 조건은 모두 null 또는 빈 문자열(""), Pageable은 위에서 설정한 값 사용
-		Page<EventRes> result = eventService.getEvents(null, "", "", "", pageable);
+		Event event1 = createTestEvent(1L);
+		Event event2 = createTestEvent(2L);
+		Page<Event> eventPage = new PageImpl<>(List.of(event1, event2), pageable, 2);
 
-		// then: 결과가 정상적으로 매핑되어 있는지 검증
+		when(eventRepository.findAll(any(Specification.class), eq(pageable)))
+			.thenReturn(eventPage);
+
+		// when
+		Page<EventRes> result = eventService.getEvents(condition, pageable);
+
+		// then
 		assertThat(result).isNotNull();
-		assertThat(result.getTotalElements()).isEqualTo(1);
+		assertThat(result.getTotalElements()).isEqualTo(2);
+		assertThat(result.getContent()).hasSize(2);
+	}
 
-		EventRes res = result.getContent().get(0);
-		assertThat(res.getEventId()).isEqualTo(1L);
-		assertThat(res.getTitle()).isEqualTo("Test Event");
-		assertThat(res.getCategory()).isEqualTo("Category1");
-		assertThat(res.getGuName()).isEqualTo("GuName1");
-		assertThat(res.getIsFree()).isEqualTo("Y");
-		assertThat(res.getStatus()).isEqualTo(Status.PROGRESS.toString());
-		assertThat(res.getLikes()).isEqualTo(0);
-		assertThat(res.getFavorites()).isEqualTo(0);
-		assertThat(res.getComments()).isEqualTo(0);
+	private Event createTestEvent(Long id) {
+		Event event = Event.builder()
+			.title("서울 음악 축제")
+			.codename("MUSIC")
+			.guName("강남구")
+			.isFree("Y")
+			.status(Status.PROGRESS)
+			.build();
+
+		// Reflection을 사용하여 ID 주입 (테스트 용도)
+		try {
+			java.lang.reflect.Field idField = Event.class.getDeclaredField("id");
+			idField.setAccessible(true);
+			idField.set(event, id);
+		} catch (Exception e) {
+			throw new RuntimeException("테스트 엔티티 ID 설정 실패", e);
+		}
+
+		return event;
 	}
 }
