@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import lombok.RequiredArgsConstructor;
+import seoul.seoulfest.event.dto.event.EventSearchCondition;
 import seoul.seoulfest.event.dto.event.response.EventDetailRes;
 import seoul.seoulfest.event.dto.event.response.EventRes;
 import seoul.seoulfest.event.enums.Status;
@@ -31,12 +32,21 @@ public class EventController {
 		@RequestParam(value = "isFree", required = false) String isFree,
 		@RequestParam(value = "category", required = false) String codename,
 		@RequestParam(value = "guName", required = false) String guName,
+		@RequestParam(value = "title", required = false) String title,
 		@RequestParam(name = "page", defaultValue = "1") int page,
 		@RequestParam(name = "size", defaultValue = "10") int size) {
 
 		Pageable pageable = PageRequest.of(page - 1, size, Sort.by("startDate").descending());
 
-		Page<EventRes> events = eventService.getEvents(status, isFree, codename, guName, pageable);
+		EventSearchCondition condition = EventSearchCondition.builder()
+			.status(status)
+			.isFree(isFree)
+			.codename(codename)
+			.guName(guName)
+			.title(title)
+			.build();
+
+		Page<EventRes> events = eventService.getEvents(condition, pageable);
 		return Response.ok(events).toResponseEntity();
 	}
 

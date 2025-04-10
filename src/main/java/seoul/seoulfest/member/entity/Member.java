@@ -26,6 +26,7 @@ import seoul.seoulfest.board.entity.PostLike;
 import seoul.seoulfest.event.entity.EventComment;
 import seoul.seoulfest.event.entity.EventFavorite;
 import seoul.seoulfest.event.entity.EventLike;
+import seoul.seoulfest.event.entity.EventSearchHistory;
 import seoul.seoulfest.member.enums.Role;
 import seoul.seoulfest.util.BaseEntity;
 
@@ -67,6 +68,9 @@ public class Member extends BaseEntity {
 
 	@OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
 	private List<EventFavorite> eventFavorites = new ArrayList<>();
+
+	@OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
+	private List<EventSearchHistory> eventSearchHistories = new ArrayList<>();
 
 	@OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
 	private List<Post> posts = new ArrayList<>();
@@ -152,6 +156,18 @@ public class Member extends BaseEntity {
 	public void removePostLike(PostLike postLike) {
 		postLikes.remove(postLike);
 		postLike.setMember(null);
+	}
+
+	// 연관관계 편의 메서드: SearchHistory 추가
+	public void addSearchHistory(EventSearchHistory searchHistory) {
+		eventSearchHistories.add(searchHistory);
+		searchHistory.setMember(this);
+	}
+
+	// 연관관계 편의 메서드: SearchHistory 제거
+	public void removeSearchHistory(EventSearchHistory searchHistory) {
+		eventSearchHistories.remove(searchHistory);
+		searchHistory.setMember(null);
 	}
 
 }
