@@ -29,7 +29,7 @@ public class EventBatchServiceImpl implements EventBatchService {
 	private final EventRepository eventRepository;
 	private final RestTemplate restTemplate;
 
-	@Value("${open-api.key}")
+	@Value("${open-api.event.key}")
 	private String API_KEY;
 
 	/**
