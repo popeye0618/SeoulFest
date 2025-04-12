@@ -49,7 +49,7 @@ public class ChatRoomValidator {
 	}
 
 	public void validateChatRoomMemberKicked(ChatRoom chatRoom, Member member) {
-		if (chatRoomMemberRepository.existsByChatRoomAndMemberAndKickedAtNotEmpty(chatRoom, member)) {
+		if (chatRoomMemberRepository.existsByChatRoomAndMemberAndKickedAtIsNotNull(chatRoom, member)) {
 			throw new BusinessException(ChatErrorCode.KICKED_CHATROOM_MEMBER);
 		}
 	}

@@ -3,6 +3,7 @@ package seoul.seoulfest.chat.service.chatting;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -42,7 +43,13 @@ public class StompInterceptor implements ChannelInterceptor {
 	private final MemberRepository memberRepository;
 	private final ChatRoomRepository chatRoomRepository;
 	private final ChatRoomMemberRepository chatRoomMemberRepository;
-	private final SimpMessagingTemplate messagingTemplate;
+
+
+	private final ObjectProvider<SimpMessagingTemplate> messagingTemplateProvider;
+
+	private SimpMessagingTemplate getMessagingTemplate() {
+		return messagingTemplateProvider.getObject();
+	}
 
 
 	/**
@@ -109,7 +116,7 @@ public class StompInterceptor implements ChannelInterceptor {
 					ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId)
 						.orElseThrow(() -> new BusinessException(ChatErrorCode.NOT_EXIST_CHATROOM));
 
-					boolean isMember = chatRoomMemberRepository.existsByChatRoomAndMemberAndKickedAtEmpty(chatRoom, member);
+					boolean isMember = chatRoomMemberRepository.existsByChatRoomAndMemberAndKickedAtIsNull(chatRoom, member);
 					if (!isMember) {
 						chatRoomMemberRepository.findByChatRoomAndMember(chatRoom, member)
 							.ifPresent(crm -> {
@@ -195,7 +202,7 @@ public class StompInterceptor implements ChannelInterceptor {
 
 			// 개인 에러 큐로 메시지 전송
 			String destination = "/user/" + verifyId + "/queue/errors";
-			messagingTemplate.convertAndSend(destination, errorResponse);
+			getMessagingTemplate().convertAndSend(destination, errorResponse);
 
 			log.info("에러 메시지 전송: [{}] {} -> {}", errorCode.getCode(), errorCode.getMessage(), verifyId);
 		} catch (Exception e) {
