@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
 import seoul.seoulfest.chat.dto.request.chatroom.CreateChatRoomReq;
 import seoul.seoulfest.chat.dto.request.chatroom.InviteChatRoomReq;
+import seoul.seoulfest.chat.dto.request.chatroom.KickChatRoomReq;
 import seoul.seoulfest.chat.dto.request.chatroom.UpdateChatRoomReq;
 import seoul.seoulfest.chat.dto.response.ChatRoomRes;
 import seoul.seoulfest.chat.dto.response.MyChatRoomRes;
@@ -61,5 +62,10 @@ public class ChatRoomServiceImpl implements ChatRoomService {
 	@Override
 	public Page<ChatRoomRes> listAllChatRooms(int page, int size, String keyword) {
 		return queryService.listAllChatRooms(page, size, keyword);
+	}
+
+	@Override
+	public void kickChatRoomMember(KickChatRoomReq request, String verifyId) {
+		managementService.kickChatRoomMember(request, verifyId);
 	}
 }

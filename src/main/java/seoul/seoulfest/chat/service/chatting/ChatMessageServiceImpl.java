@@ -63,7 +63,6 @@ public class ChatMessageServiceImpl implements ChatMessageService{
 			String s3Key = messageRequest.getTempS3Key();
 			ChatMedia chatMedia = saveChatMedia(chatMessage, s3Key);
 
-			// todo: 수정 필요
 			mediaUrl = MEDIA_URL + s3Key;
 		}
 

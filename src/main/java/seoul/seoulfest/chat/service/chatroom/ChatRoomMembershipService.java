@@ -61,6 +61,7 @@ public class ChatRoomMembershipService {
 
 		// 이미 참여한 멤버인지 확인
 		validator.validateChatRoomMemberNotExists(chatRoom, currentMember);
+		validator.validateChatRoomMemberKicked(chatRoom, currentMember);
 
 		// 채팅방 멤버로 등록
 		ChatRoomMember chatRoomMember = createChatRoomMember(chatRoom, currentMember, ChatRole.USER);
@@ -68,15 +69,14 @@ public class ChatRoomMembershipService {
 	}
 
 	/**
-	 * 채팅방 초대 (이메일)
+	 * 채팅방 초대 (이메일, verifyId)
 	 */
 	@Transactional
 	public void inviteChatRoom(InviteChatRoomReq request) {
 		ChatRoom chatRoom = validator.validateAndGetChatRoom(request.getChatRoomId());
 
 		// 초대할 멤버 조회
-		Member member = memberRepository.findByEmail(request.getEmail())
-			.orElseThrow(() -> new BusinessException(AuthErrorCode.USER_NOT_FOUND));
+		Member member = validateInviteChatRoomReq(request);
 
 		// 이미 참여한 멤버인지 확인
 		validator.validateChatRoomMemberNotExists(chatRoom, member);
@@ -84,6 +84,11 @@ public class ChatRoomMembershipService {
 		// 채팅방 멤버로 등록
 		ChatRoomMember chatRoomMember = createChatRoomMember(chatRoom, member, ChatRole.USER);
 		chatRoom.addChatRoomMember(chatRoomMember);
+	}
+
+	private Member validateInviteChatRoomReq(InviteChatRoomReq request) {
+		return request.getVerifyId() != null ? memberRepository.findByVerifyId(request.getVerifyId()).orElseThrow(() -> new BusinessException(AuthErrorCode.USER_NOT_FOUND))
+			: memberRepository.findByEmail(request.getEmail()).orElseThrow(() -> new BusinessException(AuthErrorCode.USER_NOT_FOUND));
 	}
 
 	/**
@@ -100,5 +105,14 @@ public class ChatRoomMembershipService {
 			.build();
 
 		return chatRoomMemberRepository.save(crm);
+	}
+
+	@Transactional
+	public void kickChatRoomMember(ChatRoom chatRoom, Member member) {
+		ChatRoomMember chatRoomMember = chatRoomMemberRepository.findByChatRoomAndMember(chatRoom, member)
+			.orElseThrow(() -> new BusinessException(ChatErrorCode.NOT_EXIST_CHATROOM_MEMBER));
+
+		chatRoomMember.setStatus(ChatRoomMemberStatus.KICKED);
+		chatRoomMember.setKickedAt(LocalDateTime.now());
 	}
 }

@@ -8,4 +8,7 @@ import lombok.Getter;
 public class CreateChatRoomReq {
 	private String name;
 	private String type;
+	private String path;
+	private String information;
+
 }

@@ -38,6 +38,10 @@ public class ChatRoomMember extends BaseEntity {
 	@Column(name = "joined_at", nullable = false)
 	private LocalDateTime joinedAt;
 
+	@Column(name = "kicked_at")
+	@Setter
+	private LocalDateTime kickedAt;
+
 	@Enumerated(value = EnumType.STRING)
 	private ChatRoomMemberStatus status;
 

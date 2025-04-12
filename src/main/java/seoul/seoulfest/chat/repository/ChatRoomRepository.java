@@ -10,6 +10,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import seoul.seoulfest.chat.entity.ChatRoom;
+import seoul.seoulfest.chat.enums.ChatRoomType;
 import seoul.seoulfest.member.entity.Member;
 
 @Repository
@@ -33,5 +34,5 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
 		"and cr.deletedAt is null")
 	List<ChatRoom> findChatRoomsByIdInWithMembers(@Param("ids") List<Long> ids);
 
-	Page<ChatRoom> findAllByNameContainingIgnoreCaseAndDeletedAtIsNull(String keyword, Pageable pageable);
+	Page<ChatRoom> findAllByTypeAndNameContainingIgnoreCaseAndDeletedAtIsNull(ChatRoomType type, String keyword, Pageable pageable);
 }

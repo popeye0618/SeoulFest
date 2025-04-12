@@ -7,6 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
 import seoul.seoulfest.chat.dto.request.chatroom.CreateChatRoomReq;
+import seoul.seoulfest.chat.dto.request.chatroom.KickChatRoomReq;
 import seoul.seoulfest.chat.dto.request.chatroom.UpdateChatRoomReq;
 import seoul.seoulfest.chat.entity.ChatRoom;
 import seoul.seoulfest.chat.entity.ChatRoomMember;
@@ -14,6 +15,7 @@ import seoul.seoulfest.chat.enums.ChatRole;
 import seoul.seoulfest.chat.enums.ChatRoomType;
 import seoul.seoulfest.chat.repository.ChatRoomRepository;
 import seoul.seoulfest.member.entity.Member;
+import seoul.seoulfest.member.repository.MemberRepository;
 import seoul.seoulfest.util.security.SecurityUtil;
 
 /**
@@ -39,11 +41,14 @@ public class ChatRoomManagementService {
 		Member currentMember = securityUtil.getCurrentMember();
 		ChatRoomType type = ChatRoomType.valueOf(request.getType());
 
+		String from = request.getPath().split(" ")[0];
+		Long id = Long.parseLong(request.getPath().split(" ")[1]);
+
 		// 채팅방 이름 유효성 검사
 		validator.validateChatRoomName(request.getName());
 
 		// 채팅방 생성 및 저장
-		ChatRoom chatRoom = saveChatRoom(request.getName(), type, currentMember);
+		ChatRoom chatRoom = saveChatRoom(request.getName(), type, request.getInformation(), from, id, currentMember);
 
 		// 방장을 채팅방 멤버로 등록
 		ChatRoomMember crm = membershipService.createChatRoomMember(chatRoom, currentMember, ChatRole.OWNER);
@@ -73,12 +78,30 @@ public class ChatRoomManagementService {
 	}
 
 	/**
+	 * 채팅방 유저 강퇴
+	 * @param request
+	 * @param verifyId
+	 */
+	@Transactional
+	public void kickChatRoomMember(KickChatRoomReq request, String verifyId) {
+		ChatRoom chatRoom = validator.validateAndGetChatRoom(request.getChatRoomId());
+		validator.validateOwner(chatRoom, verifyId);
+		Member member = securityUtil.getCurrentMember(request.getVerifyId());
+		membershipService.kickChatRoomMember(chatRoom, member);
+	}
+
+	/**
 	 * 채팅방 엔티티 생성 및 저장
 	 */
-	private ChatRoom saveChatRoom(String name, ChatRoomType type, Member owner) {
+	private ChatRoom saveChatRoom(String name, ChatRoomType type, String information, String from, Long id,
+		Member owner) {
+
 		ChatRoom chatRoom = ChatRoom.builder()
 			.name(name)
 			.type(type)
+			.information(type.equals(ChatRoomType.GROUP) ? information : null)
+			.fromType(from)
+			.fromId(id)
 			.owner(owner)
 			.build();
 

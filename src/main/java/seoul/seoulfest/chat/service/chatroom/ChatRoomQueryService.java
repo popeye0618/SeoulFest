@@ -17,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 import seoul.seoulfest.chat.dto.response.ChatRoomRes;
 import seoul.seoulfest.chat.dto.response.MyChatRoomRes;
 import seoul.seoulfest.chat.entity.ChatRoom;
+import seoul.seoulfest.chat.enums.ChatRoomType;
 import seoul.seoulfest.chat.repository.ChatRoomRepository;
 import seoul.seoulfest.member.entity.Member;
 import seoul.seoulfest.util.security.SecurityUtil;
@@ -56,8 +57,8 @@ public class ChatRoomQueryService {
 		String searchKeyword = normalizeKeyword(keyword);
 
 		// 채팅방 조회
-		Page<ChatRoom> chatRoomPage = chatRoomRepository.findAllByNameContainingIgnoreCaseAndDeletedAtIsNull(
-			searchKeyword, pageable);
+		Page<ChatRoom> chatRoomPage = chatRoomRepository.findAllByTypeAndNameContainingIgnoreCaseAndDeletedAtIsNull(
+			ChatRoomType.GROUP, searchKeyword, pageable);
 
 		// DTO 변환
 		return chatRoomPage.map(chatRoomDtoMapper::toChatRoomRes);
