@@ -25,6 +25,8 @@ public interface ChatRoomService {
 	 */
 	Page<ChatRoomRes> listAllChatRooms(int page, int size, String keyword);
 
+	Page<ChatRoomRes> listChatRoomsByCategory(int page, int size, String category);
+
 	/**
 	 * 채팅방 생성
 	 * @param request

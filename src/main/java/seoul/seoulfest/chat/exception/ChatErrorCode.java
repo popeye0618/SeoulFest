@@ -20,6 +20,7 @@ public enum ChatErrorCode implements ErrorCode {
 	INVALID_FILE_TYPE("CHT-010",HttpStatus.BAD_REQUEST, "지원하지 않는 파일 타입"),
 	FILE_UPLOAD_FAILED("CHT-011",HttpStatus.BAD_REQUEST, "파일 업로드 실패"),
 	KICKED_CHATROOM_MEMBER("CHT-012",HttpStatus.BAD_REQUEST, "추방된 사용자"),
+	EXITED_CHATROOM_MEMBER("CHT_013", HttpStatus.FORBIDDEN, "채팅방을 탈퇴한 회원입니다.");
 	;
 
 	private final String code;

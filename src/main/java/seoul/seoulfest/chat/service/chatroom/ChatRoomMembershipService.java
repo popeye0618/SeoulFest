@@ -2,18 +2,24 @@ package seoul.seoulfest.chat.service.chatroom;
 
 import java.time.LocalDateTime;
 
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
 import seoul.seoulfest.auth.exception.AuthErrorCode;
 import seoul.seoulfest.chat.dto.request.chatroom.InviteChatRoomReq;
+import seoul.seoulfest.chat.dto.request.chatting.response.ChatMessageResponse;
+import seoul.seoulfest.chat.dto.request.chatting.response.ChatUserStatusEvent;
+import seoul.seoulfest.chat.entity.ChatMessage;
 import seoul.seoulfest.chat.entity.ChatRoom;
 import seoul.seoulfest.chat.entity.ChatRoomMember;
 import seoul.seoulfest.chat.enums.ChatRole;
 import seoul.seoulfest.chat.enums.ChatRoomMemberStatus;
 import seoul.seoulfest.chat.exception.ChatErrorCode;
 import seoul.seoulfest.chat.repository.ChatRoomMemberRepository;
+import seoul.seoulfest.chat.repository.ChatRoomRepository;
 import seoul.seoulfest.exception.BusinessException;
 import seoul.seoulfest.member.entity.Member;
 import seoul.seoulfest.member.repository.MemberRepository;
@@ -29,8 +35,15 @@ public class ChatRoomMembershipService {
 
 	private final SecurityUtil securityUtil;
 	private final ChatRoomMemberRepository chatRoomMemberRepository;
+	private final ChatRoomRepository chatRoomRepository;
 	private final MemberRepository memberRepository;
 	private final ChatRoomValidator validator;
+
+	private final ObjectProvider<SimpMessagingTemplate> messagingTemplateProvider;
+
+	private SimpMessagingTemplate getMessagingTemplate() {
+		return messagingTemplateProvider.getObject();
+	}
 
 	/**
 	 * 채팅방 탈퇴
@@ -47,8 +60,52 @@ public class ChatRoomMembershipService {
 			throw new BusinessException(ChatErrorCode.OWNER_CANNOT_EXIT);
 		}
 
-		chatRoom.removeChatRoomMember(chatRoomMember);
-		chatRoomMemberRepository.delete(chatRoomMember);
+		chatRoomMember.setLastReadAt(LocalDateTime.now());
+		chatRoomMember.setStatus(ChatRoomMemberStatus.EXIT);
+		sendExitEvent(chatRoom.getId(), currentMember);
+	}
+
+
+	/**
+	 * 채팅방 나가기 이벤트 발송
+	 */
+	private void sendExitEvent(Long chatRoomId, Member member) {
+		// 상태 이벤트 생성
+		ChatUserStatusEvent event = ChatUserStatusEvent.builder()
+			.chatRoomId(chatRoomId)
+			.memberId(member.getId())
+			.memberName(member.getUsername())
+			.eventType("EXIT") // 'LEAVE'와 구분하기 위해 'EXIT' 사용
+			.timestamp(LocalDateTime.now())
+			.build();
+
+		// WebSocket을 통해 이벤트 발송
+		getMessagingTemplate().convertAndSend(
+			"/topic/chat/room/" + chatRoomId + "/status",
+			event
+		);
+
+		ChatMessage systemMessage = ChatMessage.builder()
+			.chatRoom(chatRoomRepository.getReferenceById(chatRoomId))
+			.content(member.getUsername() + "님이 채팅방을 나갔습니다.")
+			.type("SYSTEM")
+			.build();
+
+		ChatMessageResponse messageResponse = ChatMessageResponse.builder()
+			.messageId(systemMessage.getId())
+			.chatRoomId(chatRoomId)
+			.senderId(null)
+			.senderName("SYSTEM")
+			.content(systemMessage.getContent())
+			.type(systemMessage.getType())
+			.createdAt(LocalDateTime.now())
+			.isDeleted(false)
+			.build();
+
+		getMessagingTemplate().convertAndSend(
+			"/topic/chat/room/" + chatRoomId,
+			messageResponse
+		);
 	}
 
 	/**

@@ -16,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import seoul.seoulfest.auth.exception.AuthErrorCode;
 import seoul.seoulfest.chat.entity.ChatRoom;
+import seoul.seoulfest.chat.enums.ChatRoomMemberStatus;
 import seoul.seoulfest.chat.exception.ChatErrorCode;
 import seoul.seoulfest.chat.repository.ChatRoomMemberRepository;
 import seoul.seoulfest.exception.BusinessException;
@@ -116,20 +117,26 @@ public class StompInterceptor implements ChannelInterceptor {
 					ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId)
 						.orElseThrow(() -> new BusinessException(ChatErrorCode.NOT_EXIST_CHATROOM));
 
-					boolean isMember = chatRoomMemberRepository.existsByChatRoomAndMemberAndKickedAtIsNull(chatRoom, member);
+					chatRoomMemberRepository.findByChatRoomAndMember(chatRoom, member)
+						.ifPresent(crm -> {
+							if (crm.getStatus() == ChatRoomMemberStatus.EXIT) {
+								sendErrorToClient(accessor, ChatErrorCode.EXITED_CHATROOM_MEMBER);
+								throw new BusinessException(ChatErrorCode.EXITED_CHATROOM_MEMBER);
+							}
+
+							if (crm.getKickedAt() != null) {
+								// 강퇴된 회원인 경우
+								sendErrorToClient(accessor, ChatErrorCode.KICKED_CHATROOM_MEMBER);
+								throw new BusinessException(ChatErrorCode.KICKED_CHATROOM_MEMBER);
+							}
+						});
+
+					boolean isMember = chatRoomMemberRepository
+						.existsByChatRoomAndMemberAndStatusNotAndKickedAtIsNull(
+							chatRoom, member, ChatRoomMemberStatus.EXIT);
+
 					if (!isMember) {
-						chatRoomMemberRepository.findByChatRoomAndMember(chatRoom, member)
-							.ifPresent(crm -> {
-								if (crm.getKickedAt() != null) {
-									// 강퇴된 회원인 경우
-									sendErrorToClient(accessor, ChatErrorCode.KICKED_CHATROOM_MEMBER);
-								}
-							});
-
-						if (!chatRoomMemberRepository.existsByChatRoomAndMember(chatRoom, member)) {
-							sendErrorToClient(accessor, ChatErrorCode.NOT_EXIST_CHATROOM_MEMBER);
-						}
-
+						sendErrorToClient(accessor, ChatErrorCode.NOT_EXIST_CHATROOM_MEMBER);
 						return null;
 					}
 

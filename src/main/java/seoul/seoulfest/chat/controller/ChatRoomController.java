@@ -115,4 +115,17 @@ public class ChatRoomController {
 		return Response.ok(allChatRooms).toResponseEntity();
 	}
 
+	/**
+	 * 특정 카테고리의 채팅방 목록 조회
+	 */
+	@GetMapping("/chatrooms/{category}")
+	public ResponseEntity<Response<Page<ChatRoomRes>>> listChatRoomsByCategory(
+		@PathVariable String category,
+		@RequestParam(defaultValue = "1", required = false) int page,
+		@RequestParam(defaultValue = "10", required = false) int size) {
+
+		Page<ChatRoomRes> categoryRooms = chatRoomService.listChatRoomsByCategory(page, size, category);
+		return Response.ok(categoryRooms).toResponseEntity();
+	}
+
 }

@@ -33,6 +33,8 @@ public class ChatRoom extends BaseEntity {
 	@Setter
 	private String information;
 
+	private String category;
+
 	@Enumerated(value = EnumType.STRING)
 	private ChatRoomType type;
 
@@ -57,9 +59,10 @@ public class ChatRoom extends BaseEntity {
 	private List<ChatMessage> chatMessages = new ArrayList<>();
 
 	@Builder
-	public ChatRoom(String name, String information, ChatRoomType type, String fromType, Long fromId, Member owner) {
+	public ChatRoom(String name, String information, String category, ChatRoomType type, String fromType, Long fromId, Member owner) {
 		this.name = name;
 		this.information = information;
+		this.category = category;
 		this.type = type;
 		this.fromType = fromType;
 		this.fromId = fromId;

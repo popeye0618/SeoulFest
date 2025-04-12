@@ -68,4 +68,9 @@ public class ChatRoomServiceImpl implements ChatRoomService {
 	public void kickChatRoomMember(KickChatRoomReq request, String verifyId) {
 		managementService.kickChatRoomMember(request, verifyId);
 	}
+
+	@Override
+	public Page<ChatRoomRes> listChatRoomsByCategory(int page, int size, String category) {
+		return queryService.listChatRoomsByCategory(page, size, category);
+	}
 }

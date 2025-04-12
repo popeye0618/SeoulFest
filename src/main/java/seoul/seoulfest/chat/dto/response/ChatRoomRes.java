@@ -14,4 +14,6 @@ public class ChatRoomRes {
 	private Long chatRoomId;
 	private String name;
 	private int participation;
+	private String information;
+	private String category;
 }

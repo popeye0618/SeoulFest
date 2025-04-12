@@ -162,6 +162,35 @@ public class ChatMessageServiceImpl implements ChatMessageService{
 	}
 
 	/**
+	 * 채팅방 퇴장 처리
+	 */
+	@Override
+	@Transactional
+	public void leaveChatRoom(Long roomId, String verifyId) {
+		ChatRoom chatRoom = validateAndGetChatRoom(roomId);
+		Member member = securityUtil.getCurrentMember(verifyId);
+
+		ChatRoomMember chatRoomMember = validateAndGetChatRoomMember(chatRoom, member);
+
+		// 마지막 읽은 시간 업데이트
+		chatRoomMember.setLastReadAt(LocalDateTime.now());
+
+		// 퇴장 이벤트 발송
+		ChatUserStatusEvent event = ChatUserStatusEvent.builder()
+			.chatRoomId(roomId)
+			.memberId(member.getId())
+			.memberName(member.getUsername())
+			.eventType("LEAVE")
+			.timestamp(LocalDateTime.now())
+			.build();
+
+		messagingTemplate.convertAndSend(
+			"/topic/chat/room/" + roomId + "/status",
+			event
+		);
+	}
+
+	/**
 	 * 메시지 읽음 처리
 	 */
 	@Override

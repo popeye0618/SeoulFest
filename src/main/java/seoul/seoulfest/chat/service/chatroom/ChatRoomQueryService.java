@@ -50,6 +50,7 @@ public class ChatRoomQueryService {
 
 	/**
 	 * 전체 채팅방 목록 조회
+	 * - 채팅방 이름, 카테고리로 검색 가능
 	 */
 	public Page<ChatRoomRes> listAllChatRooms(int page, int size, String keyword) {
 		// 요청 파라미터 준비
@@ -57,10 +58,22 @@ public class ChatRoomQueryService {
 		String searchKeyword = normalizeKeyword(keyword);
 
 		// 채팅방 조회
-		Page<ChatRoom> chatRoomPage = chatRoomRepository.findAllByTypeAndNameContainingIgnoreCaseAndDeletedAtIsNull(
+		Page<ChatRoom> chatRoomPage = chatRoomRepository.findAllByTypeAndKeywordInNameOrCategory(
 			ChatRoomType.GROUP, searchKeyword, pageable);
 
 		// DTO 변환
+		return chatRoomPage.map(chatRoomDtoMapper::toChatRoomRes);
+	}
+
+	/**
+	 * 특정 카테고리의 채팅방 목록 조회
+	 */
+	public Page<ChatRoomRes> listChatRoomsByCategory(int page, int size, String category) {
+		PageRequest pageable = createPageRequest(page, size);
+
+		Page<ChatRoom> chatRoomPage = chatRoomRepository.findAllByTypeAndCategory(
+			ChatRoomType.GROUP, category, pageable);
+
 		return chatRoomPage.map(chatRoomDtoMapper::toChatRoomRes);
 	}
 

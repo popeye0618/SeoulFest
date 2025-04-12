@@ -22,18 +22,21 @@ import seoul.seoulfest.util.response.error_code.ErrorCode;
 @Getter
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class Response<T> {
+	private String code;
 	private int status;
 	private String message;
 	private T data;
 
 	public static Response<Void> ok() {
 		Response<Void> response = new Response<>();
+		response.code = "GEN-000";
 		response.status = HttpStatus.OK.value();
 		return response;
 	}
 
 	public static <T> Response<T> ok(T data) {
 		Response<T> response = new Response<>();
+		response.code = "GEN-000";
 		response.status = HttpStatus.OK.value();
 		response.data = data;
 		return response;
@@ -41,6 +44,7 @@ public class Response<T> {
 
 	public static <T> Response<T> errorResponse(ErrorCode errorCode) {
 		Response<T> response = new Response<>();
+		response.code = errorCode.getCode();
 		response.status = errorCode.getHttpStatus().value();
 		response.message = errorCode.getMessage();
 		response.data = null;

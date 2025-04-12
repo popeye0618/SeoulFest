@@ -3,8 +3,13 @@ package seoul.seoulfest.chat.service.chatroom;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Component;
 
 import lombok.RequiredArgsConstructor;
@@ -30,15 +35,22 @@ public class ChatRoomDtoMapper {
 	 */
 	public MyChatRoomRes toMyChatRoomRes(ChatRoom chatRoom, Member currentMember) {
 		int unreadCount = calculateUnreadCount(chatRoom, currentMember);
-		LocalDateTime lastMsgTime = getLastMessageTime(chatRoom) == null ? chatRoom.getCreatedAt() : getLastMessageTime(chatRoom);
+
+		Pair<LocalDateTime, String> lastMessageInfo = getLastMessageInfo(chatRoom);
+		LocalDateTime lastMsgTime = lastMessageInfo.getFirst();
+		String lastMessageText = lastMessageInfo.getSecond();
 		String formattedLastMsgTime = formatLastMessageTime(lastMsgTime);
 
 		return MyChatRoomRes.builder()
 			.chatRoomId(chatRoom.getId())
 			.name(chatRoom.getName())
 			.participation(chatRoom.getChatRoomMembers().size())
+			.type(chatRoom.getType())
+			.createdFrom(chatRoom.getFromType())
+			.createdFromId(chatRoom.getFromId())
 			.notReadMessageCount(unreadCount)
 			.lastMessageTime(formattedLastMsgTime)
+			.lastMessageText(lastMessageText)
 			.build();
 	}
 
@@ -50,6 +62,8 @@ public class ChatRoomDtoMapper {
 			.chatRoomId(chatRoom.getId())
 			.name(chatRoom.getName())
 			.participation(chatRoom.getChatRoomMembers().size())
+			.information(chatRoom.getInformation())
+			.category(chatRoom.getCategory())
 			.build();
 	}
 
@@ -71,11 +85,19 @@ public class ChatRoomDtoMapper {
 		return unreadCount;
 	}
 
-	/**
-	 * 마지막 메시지 시간 조회
-	 */
-	private LocalDateTime getLastMessageTime(ChatRoom chatRoom) {
-		return chatMessageRepository.findLastMessageTimeByRoomId(chatRoom.getId());
+	private Pair<LocalDateTime, String> getLastMessageInfo(ChatRoom chatRoom) {
+		Pageable topOne = PageRequest.of(0, 1);
+		List<Map<String, Object>> result = chatMessageRepository.findLastMessageInfoByChatRoomId(chatRoom.getId(), topOne);
+
+		if (result.isEmpty()) {
+			return Pair.of(chatRoom.getCreatedAt(), "");
+		}
+
+		Map<String, Object> lastMessage = result.get(0);
+		LocalDateTime createdAt = (LocalDateTime) lastMessage.get("createdAt");
+		String content = (String) lastMessage.get("content");
+
+		return Pair.of(createdAt, content);
 	}
 
 	/**
