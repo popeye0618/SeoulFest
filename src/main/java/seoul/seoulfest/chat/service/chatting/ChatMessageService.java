@@ -45,6 +45,8 @@ public interface ChatMessageService {
 	 */
 	void enterChatRoom(Long roomId, String verifyId);
 
+	void leaveChatRoom(Long roomId, String verifyId);
+
 	/**
 	 * 메시지 읽음 처리
 	 *

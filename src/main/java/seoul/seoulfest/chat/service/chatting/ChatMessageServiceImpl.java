@@ -63,7 +63,6 @@ public class ChatMessageServiceImpl implements ChatMessageService{
 			String s3Key = messageRequest.getTempS3Key();
 			ChatMedia chatMedia = saveChatMedia(chatMessage, s3Key);
 
-			// todo: 수정 필요
 			mediaUrl = MEDIA_URL + s3Key;
 		}
 
@@ -160,6 +159,35 @@ public class ChatMessageServiceImpl implements ChatMessageService{
 			event
 		);
 
+	}
+
+	/**
+	 * 채팅방 퇴장 처리
+	 */
+	@Override
+	@Transactional
+	public void leaveChatRoom(Long roomId, String verifyId) {
+		ChatRoom chatRoom = validateAndGetChatRoom(roomId);
+		Member member = securityUtil.getCurrentMember(verifyId);
+
+		ChatRoomMember chatRoomMember = validateAndGetChatRoomMember(chatRoom, member);
+
+		// 마지막 읽은 시간 업데이트
+		chatRoomMember.setLastReadAt(LocalDateTime.now());
+
+		// 퇴장 이벤트 발송
+		ChatUserStatusEvent event = ChatUserStatusEvent.builder()
+			.chatRoomId(roomId)
+			.memberId(member.getId())
+			.memberName(member.getUsername())
+			.eventType("LEAVE")
+			.timestamp(LocalDateTime.now())
+			.build();
+
+		messagingTemplate.convertAndSend(
+			"/topic/chat/room/" + roomId + "/status",
+			event
+		);
 	}
 
 	/**

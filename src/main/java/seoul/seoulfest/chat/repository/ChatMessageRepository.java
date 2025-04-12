@@ -1,6 +1,8 @@
 package seoul.seoulfest.chat.repository;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -36,4 +38,16 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> 
 		@Param("roomId") Long roomId,
 		@Param("messageId") Long messageId,
 		Pageable pageable);
+
+	/**
+	 * 특정 채팅방의 마지막 메시지 내용 조회 (List로 반환)
+	 */
+	@Query("SELECT cm.content FROM ChatMessage cm WHERE cm.chatRoom.id = :chatRoomId ORDER BY cm.createdAt DESC")
+	List<String> findLastMessageContentByChatRoomId(@Param("chatRoomId") Long chatRoomId, Pageable pageable);
+
+	/**
+	 * 특정 채팅방의 마지막 메시지 정보(시간, 내용) 조회
+	 */
+	@Query("SELECT new map(cm.createdAt as createdAt, cm.content as content) FROM ChatMessage cm WHERE cm.chatRoom.id = :chatRoomId ORDER BY cm.createdAt DESC")
+	List<Map<String, Object>> findLastMessageInfoByChatRoomId(@Param("chatRoomId") Long chatRoomId, Pageable pageable);
 }

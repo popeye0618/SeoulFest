@@ -24,4 +24,6 @@ public interface MemberService {
 	void updateFeature(UpdateFeatureReq request);
 
 	MemberInfoRes getMemberInfo();
+
+	void validEmail(String email);
 }

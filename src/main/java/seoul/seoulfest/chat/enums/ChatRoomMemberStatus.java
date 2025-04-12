@@ -1,5 +1,5 @@
 package seoul.seoulfest.chat.enums;
 
 public enum ChatRoomMemberStatus {
-	ACTIVE, KICKED;
+	ACTIVE, KICKED, EXIT;
 }

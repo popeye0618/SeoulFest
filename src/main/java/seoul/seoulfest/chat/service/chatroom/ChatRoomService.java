@@ -4,6 +4,7 @@ import org.springframework.data.domain.Page;
 
 import seoul.seoulfest.chat.dto.request.chatroom.CreateChatRoomReq;
 import seoul.seoulfest.chat.dto.request.chatroom.InviteChatRoomReq;
+import seoul.seoulfest.chat.dto.request.chatroom.KickChatRoomReq;
 import seoul.seoulfest.chat.dto.request.chatroom.UpdateChatRoomReq;
 import seoul.seoulfest.chat.dto.response.ChatRoomRes;
 import seoul.seoulfest.chat.dto.response.MyChatRoomRes;
@@ -24,6 +25,12 @@ public interface ChatRoomService {
 	 */
 	Page<ChatRoomRes> listAllChatRooms(int page, int size, String keyword);
 
+	Page<ChatRoomRes> listChatRoomsByCategory(int page, int size, String category);
+
+	/**
+	 * 채팅방 생성
+	 * @param request
+	 */
 	void createChatRoom(CreateChatRoomReq request);
 
 	/**
@@ -40,6 +47,8 @@ public interface ChatRoomService {
 	 * 채팅방 이름 변경 (방장만 가능)
 	 */
 	void updateChatRoomName(UpdateChatRoomReq request, String verifyId);
+
+	void kickChatRoomMember(KickChatRoomReq request, String verifyId);
 
 	/**
 	 * 채팅방 참여 (join)

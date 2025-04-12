@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import seoul.seoulfest.auth.custom.CustomUserDetails;
 import seoul.seoulfest.chat.dto.request.chatroom.CreateChatRoomReq;
@@ -82,7 +83,7 @@ public class ChatRoomController {
 	 * 채팅방 초대 (이메일)
 	 */
 	@PostMapping("/chatrooms/invite")
-	public ResponseEntity<Response<Void>> inviteChatRoom(@RequestBody InviteChatRoomReq request) {
+	public ResponseEntity<Response<Void>> inviteChatRoom(@RequestBody @Valid InviteChatRoomReq request) {
 		chatRoomService.inviteChatRoom(request);
 		return Response.ok().toResponseEntity();
 	}
@@ -112,6 +113,19 @@ public class ChatRoomController {
 
 		Page<ChatRoomRes> allChatRooms = chatRoomService.listAllChatRooms(page, size, keyword);
 		return Response.ok(allChatRooms).toResponseEntity();
+	}
+
+	/**
+	 * 특정 카테고리의 채팅방 목록 조회
+	 */
+	@GetMapping("/chatrooms/{category}")
+	public ResponseEntity<Response<Page<ChatRoomRes>>> listChatRoomsByCategory(
+		@PathVariable String category,
+		@RequestParam(defaultValue = "1", required = false) int page,
+		@RequestParam(defaultValue = "10", required = false) int size) {
+
+		Page<ChatRoomRes> categoryRooms = chatRoomService.listChatRoomsByCategory(page, size, category);
+		return Response.ok(categoryRooms).toResponseEntity();
 	}
 
 }

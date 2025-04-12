@@ -10,15 +10,17 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import seoul.seoulfest.chat.entity.ChatRoom;
+import seoul.seoulfest.chat.enums.ChatRoomType;
 import seoul.seoulfest.member.entity.Member;
 
 @Repository
 public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
 
-	// 페이징을 위한 쿼리 - ID만 가져옴
+	// 페이징을 위한 쿼리 - ID만 가져옴 (EXIT 상태가 아닌 멤버만)
 	@Query("select cr.id from ChatRoom cr " +
 		"join cr.chatRoomMembers crm " +
 		"where crm.member = :member " +
+		"and crm.status != 'EXIT' " +  // EXIT 상태가 아닌 멤버만 포함
 		"and cr.name like CONCAT('%', :keyword, '%') " +
 		"and cr.deletedAt is null " +
 		"group by cr.id")
@@ -33,5 +35,25 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
 		"and cr.deletedAt is null")
 	List<ChatRoom> findChatRoomsByIdInWithMembers(@Param("ids") List<Long> ids);
 
-	Page<ChatRoom> findAllByNameContainingIgnoreCaseAndDeletedAtIsNull(String keyword, Pageable pageable);
+	Page<ChatRoom> findAllByTypeAndNameContainingIgnoreCaseAndDeletedAtIsNull(ChatRoomType type, String keyword, Pageable pageable);
+
+	// 이름 또는 카테고리로 검색하는 메서드
+	@Query("select cr from ChatRoom cr " +
+		"where cr.type = :type " +
+		"and (cr.name like CONCAT('%', :keyword, '%') OR " +
+		"     cr.category like CONCAT('%', :keyword, '%')) " +
+		"and cr.deletedAt is null")
+	Page<ChatRoom> findAllByTypeAndKeywordInNameOrCategory(
+		@Param("type") ChatRoomType type,
+		@Param("keyword") String keyword,
+		Pageable pageable);
+
+	@Query("select cr from ChatRoom cr " +
+		"where cr.type = :type " +
+		"and cr.category = :category " +
+		"and cr.deletedAt is null")
+	Page<ChatRoom> findAllByTypeAndCategory(
+		@Param("type") ChatRoomType type,
+		@Param("category") String category,
+		Pageable pageable);
 }

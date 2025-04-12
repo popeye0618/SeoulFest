@@ -1,4 +1,4 @@
-package seoul.seoulfest.chat.dto.response;
+package seoul.seoulfest.chat.dto.request.chatroom;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,11 +9,9 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ChatRoomRes {
+public class KickChatRoomReq {
 
 	private Long chatRoomId;
-	private String name;
-	private int participation;
-	private String information;
-	private String category;
+	private String verifyId;
+
 }

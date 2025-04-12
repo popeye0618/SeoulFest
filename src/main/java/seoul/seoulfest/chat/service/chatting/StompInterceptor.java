@@ -1,7 +1,12 @@
 package seoul.seoulfest.chat.service.chatting;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
@@ -11,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import seoul.seoulfest.auth.exception.AuthErrorCode;
 import seoul.seoulfest.chat.entity.ChatRoom;
+import seoul.seoulfest.chat.enums.ChatRoomMemberStatus;
 import seoul.seoulfest.chat.exception.ChatErrorCode;
 import seoul.seoulfest.chat.repository.ChatRoomMemberRepository;
 import seoul.seoulfest.exception.BusinessException;
@@ -18,6 +24,7 @@ import seoul.seoulfest.member.entity.Member;
 import seoul.seoulfest.member.repository.MemberRepository;
 import seoul.seoulfest.chat.repository.ChatRoomRepository;
 import seoul.seoulfest.util.jwt.JwtTokenProvider;
+import seoul.seoulfest.util.response.error_code.ErrorCode;
 import seoul.seoulfest.util.security.SecurityUtil;
 
 /**
@@ -37,6 +44,13 @@ public class StompInterceptor implements ChannelInterceptor {
 	private final MemberRepository memberRepository;
 	private final ChatRoomRepository chatRoomRepository;
 	private final ChatRoomMemberRepository chatRoomMemberRepository;
+
+
+	private final ObjectProvider<SimpMessagingTemplate> messagingTemplateProvider;
+
+	private SimpMessagingTemplate getMessagingTemplate() {
+		return messagingTemplateProvider.getObject();
+	}
 
 
 	/**
@@ -103,14 +117,32 @@ public class StompInterceptor implements ChannelInterceptor {
 					ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId)
 						.orElseThrow(() -> new BusinessException(ChatErrorCode.NOT_EXIST_CHATROOM));
 
-					boolean isMember = chatRoomMemberRepository.existsByChatRoomAndMember(chatRoom, member);
+					chatRoomMemberRepository.findByChatRoomAndMember(chatRoom, member)
+						.ifPresent(crm -> {
+							if (crm.getStatus() == ChatRoomMemberStatus.EXIT) {
+								sendErrorToClient(accessor, ChatErrorCode.EXITED_CHATROOM_MEMBER);
+								throw new BusinessException(ChatErrorCode.EXITED_CHATROOM_MEMBER);
+							}
+
+							if (crm.getKickedAt() != null) {
+								// 강퇴된 회원인 경우
+								sendErrorToClient(accessor, ChatErrorCode.KICKED_CHATROOM_MEMBER);
+								throw new BusinessException(ChatErrorCode.KICKED_CHATROOM_MEMBER);
+							}
+						});
+
+					boolean isMember = chatRoomMemberRepository
+						.existsByChatRoomAndMemberAndStatusNotAndKickedAtIsNull(
+							chatRoom, member, ChatRoomMemberStatus.EXIT);
+
 					if (!isMember) {
-						throw new BusinessException(ChatErrorCode.NOT_EXIST_CHATROOM_MEMBER);
+						sendErrorToClient(accessor, ChatErrorCode.NOT_EXIST_CHATROOM_MEMBER);
+						return null;
 					}
 
 					log.info("채팅방({}) 구독 성공: {}", chatRoomId, verifyId);
-				} catch (NumberFormatException e) {
-					log.error("채팅방 ID 파싱 오류: {}", destination, e);
+				} catch (BusinessException e) {
+					sendErrorToClient(accessor, e.getErrorCode());
 					return null;
 				} catch (Exception e) {
 					log.error("구독 처리 오류: {}", e.getMessage(), e);
@@ -145,5 +177,43 @@ public class StompInterceptor implements ChannelInterceptor {
 
 		log.error("잘못된 목적지 형식: {}", destination);
 		throw new BusinessException(ChatErrorCode.NOT_EXIST_CHATROOM);
+	}
+
+	/**
+	 * 클라이언트에게 에러 메시지 전송
+	 */
+	private void sendErrorToClient(StompHeaderAccessor accessor, ErrorCode errorCode) {
+		try {
+			String verifyId = null;
+			if (accessor.getUser() != null) {
+				verifyId = accessor.getUser().getName();
+			} else if (accessor.getSessionAttributes() != null) {
+				verifyId = (String) accessor.getSessionAttributes().get("verifyId");
+			}
+
+			if (verifyId == null) {
+				log.warn("에러 메시지를 전송할 사용자 ID를 찾을 수 없습니다.");
+				return;
+			}
+
+			// 에러 응답 형식 구성 (기존 Response 형식과 일치)
+			Map<String, Object> errorResponse = new HashMap<>();
+			errorResponse.put("success", false);
+			errorResponse.put("status", errorCode.getHttpStatus().value());
+
+			Map<String, Object> error = new HashMap<>();
+			error.put("code", errorCode.getCode());
+			error.put("message", errorCode.getMessage());
+
+			errorResponse.put("error", error);
+
+			// 개인 에러 큐로 메시지 전송
+			String destination = "/user/" + verifyId + "/queue/errors";
+			getMessagingTemplate().convertAndSend(destination, errorResponse);
+
+			log.info("에러 메시지 전송: [{}] {} -> {}", errorCode.getCode(), errorCode.getMessage(), verifyId);
+		} catch (Exception e) {
+			log.error("에러 메시지 전송 실패: {}", e.getMessage(), e);
+		}
 	}
 }

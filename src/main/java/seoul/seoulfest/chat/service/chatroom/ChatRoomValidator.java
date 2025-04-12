@@ -48,6 +48,13 @@ public class ChatRoomValidator {
 		}
 	}
 
+	public void validateChatRoomMemberKicked(ChatRoom chatRoom, Member member) {
+		if (chatRoomMemberRepository.existsByChatRoomAndMemberAndKickedAtIsNotNull(chatRoom, member)) {
+			throw new BusinessException(ChatErrorCode.KICKED_CHATROOM_MEMBER);
+		}
+	}
+
+
 	/**
 	 * 채팅방 소유자 권한 검사
 	 * - 요청자가 채팅방 소유자인지 확인

@@ -57,6 +57,22 @@ public class ChatMessageController {
 	}
 
 	/**
+	 * 채팅방 퇴장
+	 */
+	@MessageMapping("/chat/room/{roomId}/leave")
+	public void leaveChatRoom(@DestinationVariable Long roomId,
+		SimpMessageHeaderAccessor headerAccessor) {
+
+		try {
+			String verifyId = getUserVerifyId(headerAccessor);
+			chatMessageService.leaveChatRoom(roomId, verifyId);
+		} catch (Exception e) {
+			log.error("채팅방 퇴장 오류: {}", e.getMessage(), e);
+			throw e;
+		}
+	}
+
+	/**
 	 * 채팅 메시지 삭제
 	 * - 클라이언트가 "/app/chat/message/delete"로 메시지를 보내면 처리
 	 * - 삭제된 메시지는 웹소켓을 통해 실시간으로 모든 사용자에게 전달됨
