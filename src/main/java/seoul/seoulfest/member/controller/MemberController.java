@@ -4,6 +4,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -17,7 +18,6 @@ import seoul.seoulfest.member.dto.response.InputFeatureRes;
 import seoul.seoulfest.member.dto.response.MemberInfoRes;
 import seoul.seoulfest.member.service.MemberService;
 import seoul.seoulfest.util.response.Response;
-import seoul.seoulfest.util.security.SecurityUtil;
 
 @RestController
 @RequiredArgsConstructor
@@ -25,7 +25,6 @@ import seoul.seoulfest.util.security.SecurityUtil;
 public class MemberController {
 
 	private final MemberService memberService;
-	private final SecurityUtil securityUtil;
 
 	/**
 	 * 유저 피처 입력
@@ -44,6 +43,7 @@ public class MemberController {
 
 	/**
 	 * 유저 정보 업데이트
+	 *
 	 * @param request 새 유저 정보
 	 */
 	@PatchMapping("/auth/user/feature")
@@ -58,6 +58,13 @@ public class MemberController {
 		MemberInfoRes memberInfoRes = memberService.getMemberInfo();
 
 		return Response.ok(memberInfoRes).toResponseEntity();
+	}
+
+	@GetMapping("/auth/all-user/email/{email}")
+	public ResponseEntity<Response<Void>> checkEmailDup(@PathVariable String email) {
+		memberService.validEmail(email);
+
+		return Response.ok().toResponseEntity();
 	}
 
 }

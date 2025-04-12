@@ -37,6 +37,9 @@ public class MemberServiceImpl implements MemberService{
 	@Override
 	@Transactional
 	public InputFeatureRes inputFeature(CustomUserDetails userDetails, InputFeatureReq request) {
+
+		validEmail(request.getEmail());
+
 		Member currentMember = securityUtil.getCurrentMember();
 
 		validRoleSemi(currentMember);
@@ -66,6 +69,13 @@ public class MemberServiceImpl implements MemberService{
 	private void validRoleSemi(Member member) {
 		if (!member.getRole().equals(Role.ROLE_SEMI_USER)) {
 			throw new BusinessException(AuthErrorCode.INVALID_ROLE);
+		}
+	}
+
+	@Override
+	public void validEmail(String email) {
+		if (memberRepository.existsByEmail(email)) {
+			throw new BusinessException(AuthErrorCode.EMAIL_DUPLICATED);
 		}
 	}
 

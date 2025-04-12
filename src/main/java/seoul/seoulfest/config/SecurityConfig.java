@@ -71,6 +71,7 @@ public class SecurityConfig {
 			.authorizeHttpRequests(auth -> auth
 				.requestMatchers(WHITELIST.toArray(new String[0])).permitAll()
 				.requestMatchers("/api/auth/semi/**").hasRole("SEMI_USER")
+				.requestMatchers("/api/auth/all-user/**").hasAnyRole("SEMI_USER", "USER")
 				.requestMatchers("/api/auth/user/**").hasAnyRole("USER", "ADMIN")
 				.requestMatchers("/api/auth/admin/**").hasRole("ADMIN")
 				.anyRequest().authenticated()
