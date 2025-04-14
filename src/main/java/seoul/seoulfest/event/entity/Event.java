@@ -20,6 +20,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import seoul.seoulfest.event.enums.Status;
+import seoul.seoulfest.recommand.entity.AiRecommendation;
 import seoul.seoulfest.util.BaseEntity;
 
 @Entity
@@ -104,6 +105,9 @@ public class Event extends BaseEntity {
 
 	@OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
 	private List<EventFavorite> eventFavorites = new ArrayList<>();
+
+	@OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
+	private List<AiRecommendation> recommendations = new ArrayList<>();
 
 	@Builder
 	public Event(Status status, String codename, String guName, String title, LocalDateTime eventDateTime, String place,

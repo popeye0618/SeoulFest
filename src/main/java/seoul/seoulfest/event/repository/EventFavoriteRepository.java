@@ -1,5 +1,6 @@
 package seoul.seoulfest.event.repository;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.domain.Page;
@@ -13,6 +14,8 @@ import seoul.seoulfest.member.entity.Member;
 
 @Repository
 public interface EventFavoriteRepository extends JpaRepository<EventFavorite, Long> {
+
+	List<EventFavorite> findByMemberId(Long memberId);
 
 	Optional<EventFavorite> findByEventAndMember(Event event, Member member);
 

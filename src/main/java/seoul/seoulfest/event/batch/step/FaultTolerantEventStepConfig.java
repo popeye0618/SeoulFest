@@ -8,7 +8,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.transaction.PlatformTransactionManager;
 
 import lombok.RequiredArgsConstructor;
-import seoul.seoulfest.event.batch.listener.MyStepListener;
+import seoul.seoulfest.event.batch.listener.EventStepListener;
 import seoul.seoulfest.event.batch.processor.ApiEventItemProcessor;
 import seoul.seoulfest.event.batch.reader.OpenApiEventItemReader;
 import seoul.seoulfest.event.batch.writer.EventItemWriter;
@@ -37,7 +37,7 @@ public class FaultTolerantEventStepConfig {
 			.retry(Exception.class)
 			.skipLimit(10)
 			.skip(Exception.class)
-			.listener(new MyStepListener())
+			.listener(new EventStepListener())
 			.build();
 	}
 }
