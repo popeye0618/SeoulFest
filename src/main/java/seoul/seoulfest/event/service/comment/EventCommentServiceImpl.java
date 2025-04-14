@@ -1,6 +1,12 @@
 package seoul.seoulfest.event.service.comment;
 
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.jsoup.Jsoup;
 import org.jsoup.safety.Safelist;
@@ -13,6 +19,7 @@ import lombok.RequiredArgsConstructor;
 import seoul.seoulfest.event.dto.comment.request.EventCommentReq;
 import seoul.seoulfest.event.dto.comment.request.EventCommentUpdateReq;
 import seoul.seoulfest.event.dto.comment.response.EventCommentRes;
+import seoul.seoulfest.event.dto.comment.response.EventReplyCommentRes;
 import seoul.seoulfest.event.entity.Event;
 import seoul.seoulfest.event.entity.EventComment;
 import seoul.seoulfest.event.exception.EventErrorCode;
@@ -108,18 +115,49 @@ public class EventCommentServiceImpl implements EventCommentService {
 		EventComment comment = eventCommentRepository.findById(commentId)
 			.orElseThrow(() -> new BusinessException(EventErrorCode.NOT_EXIST_COMMENT));
 
-		EventComment parentComment = getParentComment(commentId);
-
 		Member currentMember = validateWriter(comment);
 
-		currentMember.removeEventComment(comment);
-
-		if (parentComment != null) {
+		if (comment.getParent() != null) {
+			// 3-1. 부모 댓글에서 해당 대댓글 연관관계 제거
+			EventComment parentComment = comment.getParent();
 			parentComment.removeReply(comment);
-		} else {
+
+			// 3-2. 이벤트에서 해당 댓글 연관관계 제거
 			comment.getEvent().removeEventComment(comment);
+
+			// 3-3. 사용자에서 해당 댓글 연관관계 제거
+			currentMember.removeEventComment(comment);
+
+			// 3-4. 부모 댓글 참조 제거
+			comment.setParent(null);
+		} else {
+			// 4-1. 자식 댓글들(대댓글)이 있는 경우 처리
+			List<EventComment> childComments = new ArrayList<>(comment.getReplies());
+			for (EventComment childComment : childComments) {
+				// 대댓글의 부모 참조 제거
+				childComment.setParent(null);
+
+				// 이벤트와 대댓글의 연관관계도 제거
+				comment.getEvent().removeEventComment(childComment);
+
+				// 사용자와 대댓글의 연관관계도 제거
+				childComment.getMember().removeEventComment(childComment);
+
+				// 대댓글 삭제
+				eventCommentRepository.delete(childComment);
+			}
+
+			// 4-2. 자식 댓글 컬렉션 비우기
+			comment.clearReplies();
+
+			// 4-3. 이벤트에서 해당 댓글 연관관계 제거
+			comment.getEvent().removeEventComment(comment);
+
+			// 4-4. 사용자에서 해당 댓글 연관관계 제거
+			currentMember.removeEventComment(comment);
 		}
 
+		// 5. 최종적으로 댓글 삭제
 		eventCommentRepository.delete(comment);
 	}
 
@@ -140,17 +178,55 @@ public class EventCommentServiceImpl implements EventCommentService {
 	 */
 	@Override
 	public Page<EventCommentRes> getComments(Long eventId, Pageable pageable) {
-		Page<EventComment> commentPage = eventCommentRepository.findByEvent_Id(eventId, pageable);
+
+		if (!eventRepository.existsById(eventId)) {
+			throw new BusinessException(EventErrorCode.NOT_EXIST_EVENT);
+		}
+
+		Page<EventComment> parentCommentPage = eventCommentRepository.findByEvent_IdAndParentIsNull(
+			eventId, pageable);
 
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
-		return commentPage.map(comment -> EventCommentRes.builder()
-			.commentId(comment.getId())
-			.eventId(comment.getEvent().getId())
-			.memberId(comment.getMember().getId())
-			.content(comment.getContent())
-			.parentCommentId(comment.getParent() != null ? comment.getParent().getId() : null)
-			.createdAt(comment.getCreatedAt().format(formatter))
-			.build());
+		List<Long> parentCommentIds = parentCommentPage.getContent().stream()
+			.map(EventComment::getId)
+			.toList();
+
+		List<EventComment> childComments = parentCommentIds.isEmpty() ?
+			Collections.emptyList() :
+			eventCommentRepository.findByEvent_IdAndParentIdIn(eventId, parentCommentIds);
+
+		Map<Long, List<EventComment>> childCommentMap = childComments.stream()
+			.collect(Collectors.groupingBy(comment -> comment.getParent().getId()));
+
+		return parentCommentPage.map(parentComment -> {
+			// 부모 댓글 DTO 생성
+			EventCommentRes parentDto = EventCommentRes.builder()
+				.commentId(parentComment.getId())
+				.eventId(parentComment.getEvent().getId())
+				.memberId(parentComment.getMember().getId())
+				.content(parentComment.getContent())
+				.createdAt(parentComment.getCreatedAt().format(formatter))
+				.build();
+
+			// 해당 부모 댓글의 대댓글이 존재하면 변환하여 추가
+			List<EventComment> replies = childCommentMap.getOrDefault(parentComment.getId(), Collections.emptyList());
+
+			// 대댓글들을 댓글 생성 시간 기준으로 정렬 (오래된 순)
+			List<EventReplyCommentRes> replyDtos = replies.stream()
+				.sorted(Comparator.comparing(EventComment::getCreatedAt))
+				.map(reply -> EventReplyCommentRes.builder()
+					.commentId(reply.getId())
+					.eventId(reply.getEvent().getId())
+					.memberId(reply.getMember().getId())
+					.content(reply.getContent())
+					.parentCommentId(reply.getParent().getId())
+					.createdAt(reply.getCreatedAt().format(formatter))
+					.build())
+				.collect(Collectors.toList());
+
+			parentDto.getReplies().addAll(replyDtos);
+			return parentDto;
+		});
 	}
 }

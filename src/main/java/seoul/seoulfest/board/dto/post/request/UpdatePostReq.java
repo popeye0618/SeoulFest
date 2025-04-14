@@ -8,7 +8,6 @@ import lombok.Getter;
 @Getter
 @Builder
 public class UpdatePostReq {
-	private Long postId;
 	private String title;
 	private String content;
 	private List<String> keyList;

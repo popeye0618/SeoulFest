@@ -70,4 +70,8 @@ public class EventComment extends BaseEntity {
 	public void removeReply(EventComment reply) {
 		this.replies.remove(reply);
 	}
+
+	public void clearReplies() {
+		this.replies.clear();
+	}
 }

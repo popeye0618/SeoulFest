@@ -54,6 +54,9 @@ public class PostServiceImpl implements PostService {
 
 	@Override
 	public Page<PostListRes> getPosts(Long boardId, Pageable pageable) {
+
+		validateBoard(boardId);
+
 		Page<Post> postsPage;
 		if (pageable.getSort() != null && pageable.getSort().isSorted()) {
 			// 정렬 조건 중 첫 번째 필드명을 가져옵니다.
