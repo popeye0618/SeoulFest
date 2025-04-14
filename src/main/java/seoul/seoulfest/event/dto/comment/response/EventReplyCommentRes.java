@@ -17,4 +17,3 @@ public class EventReplyCommentRes {
 	private Long parentCommentId;  // 부모 댓글 ID 참조
 	private String createdAt;
 }
-가
