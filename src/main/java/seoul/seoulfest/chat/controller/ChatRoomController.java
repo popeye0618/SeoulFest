@@ -18,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 import seoul.seoulfest.auth.custom.CustomUserDetails;
 import seoul.seoulfest.chat.dto.request.chatroom.CreateChatRoomReq;
 import seoul.seoulfest.chat.dto.request.chatroom.InviteChatRoomReq;
+import seoul.seoulfest.chat.dto.request.chatroom.KickChatRoomReq;
 import seoul.seoulfest.chat.dto.request.chatroom.UpdateChatRoomReq;
 import seoul.seoulfest.chat.dto.response.ChatRoomRes;
 import seoul.seoulfest.chat.dto.response.MyChatRoomRes;
@@ -80,11 +81,27 @@ public class ChatRoomController {
 	}
 
 	/**
-	 * 채팅방 초대 (이메일)
+	 * 채팅방 초대 (이메일, 고유번호)
 	 */
 	@PostMapping("/chatrooms/invite")
 	public ResponseEntity<Response<Void>> inviteChatRoom(@RequestBody @Valid InviteChatRoomReq request) {
 		chatRoomService.inviteChatRoom(request);
+		return Response.ok().toResponseEntity();
+	}
+
+	/**
+	 * 채팅방 강퇴
+	 * @param reqeust
+	 * @param userDetails
+	 * @return
+	 */
+	@DeleteMapping("/chatrooms/kick")
+	public ResponseEntity<Response<Void>> kickChatRoomMember(
+		@RequestBody KickChatRoomReq reqeust,
+		@AuthenticationPrincipal CustomUserDetails userDetails) {
+
+		chatRoomService.kickChatRoomMember(reqeust, userDetails.getName());
+
 		return Response.ok().toResponseEntity();
 	}
 
@@ -127,5 +144,7 @@ public class ChatRoomController {
 		Page<ChatRoomRes> categoryRooms = chatRoomService.listChatRoomsByCategory(page, size, category);
 		return Response.ok(categoryRooms).toResponseEntity();
 	}
+
+
 
 }

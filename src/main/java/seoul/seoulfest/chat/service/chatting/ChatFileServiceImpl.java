@@ -21,12 +21,12 @@ public class ChatFileServiceImpl implements ChatFileService {
 
 	@Override
 	public PresignedUrlResponse getUploadUrl(String fileName, String contentType) {
-		// 파일 타입 유효성 검사
+
 		validateFileType(contentType);
 
 		try {
-			// S3 Pre-signed URL 생성 (채팅용 경로로 수정)
-			return s3Service.generatePresignedUrl("chat/" + fileName, contentType);
+			// S3 Pre-signed URL 생성
+			return s3Service.generateChatMediaPresignedUrl(fileName, contentType);
 		} catch (Exception e) {
 			log.error("Pre-signed URL 생성 실패: {}", e.getMessage(), e);
 			throw new BusinessException(ChatErrorCode.FILE_UPLOAD_FAILED);
