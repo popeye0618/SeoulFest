@@ -12,7 +12,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import seoul.seoulfest.aws.service.S3Service;
 import seoul.seoulfest.chat.dto.request.chatting.request.ChatMessageRequest;
 import seoul.seoulfest.chat.dto.request.chatting.response.ChatMessageResponse;
 import seoul.seoulfest.chat.dto.request.chatting.response.ChatUserStatusEvent;
@@ -27,21 +26,18 @@ import seoul.seoulfest.chat.repository.ChatRoomMemberRepository;
 import seoul.seoulfest.chat.repository.ChatRoomRepository;
 import seoul.seoulfest.exception.BusinessException;
 import seoul.seoulfest.member.entity.Member;
-import seoul.seoulfest.member.repository.MemberRepository;
 import seoul.seoulfest.util.security.SecurityUtil;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class ChatMessageServiceImpl implements ChatMessageService{
+public class ChatMessageServiceImpl implements ChatMessageService {
 
 	private final ChatMessageRepository chatMessageRepository;
 	private final ChatRoomRepository chatRoomRepository;
 	private final ChatRoomMemberRepository chatRoomMemberRepository;
-	private final MemberRepository memberRepository;
 	private final ChatMediaRepository chatMediaRepository;
 	private final SecurityUtil securityUtil;
-	private final S3Service s3Service;
 
 	// WebSocket 메시지 발송을 위한 템플릿
 	private final SimpMessagingTemplate messagingTemplate;
@@ -338,7 +334,7 @@ public class ChatMessageServiceImpl implements ChatMessageService{
 			.type(message.getType())
 			.createdAt(message.getCreatedAt())
 			.isDeleted(isDeleted)
-			// 삭제된 메시지는 미디어 URL을a 표시하지 않음
+			// 삭제된 메시지는 미디어 URL을 표시하지 않음
 			.mediaUrl(isDeleted ? null : mediaUrl)
 			.build();
 	}

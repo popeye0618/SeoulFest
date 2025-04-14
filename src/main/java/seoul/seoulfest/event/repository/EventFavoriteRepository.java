@@ -16,5 +16,7 @@ public interface EventFavoriteRepository extends JpaRepository<EventFavorite, Lo
 
 	Optional<EventFavorite> findByEventAndMember(Event event, Member member);
 
+	boolean existsByEventAndMember(Event event, Member member);
+
 	Page<EventFavorite> findByMember(Member member, Pageable pageable);
 }

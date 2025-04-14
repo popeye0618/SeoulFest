@@ -1,5 +1,8 @@
 package seoul.seoulfest.event.dto.comment.response;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -14,6 +17,9 @@ public class EventCommentRes {
 	private Long eventId;
 	private Long memberId;
 	private String content;
-	private Long parentCommentId;
 	private String createdAt;
+
+	// 대댓글 목록
+	@Builder.Default
+	private List<EventReplyCommentRes> replies = new ArrayList<>();
 }

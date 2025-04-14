@@ -71,23 +71,27 @@ public class PostMediaServiceImpl implements PostMediaService {
 	}
 
 	private void processUpdate(Post post, Set<String> keysToDelete) {
-		post.getPostMedias().removeIf(media -> {
-			if (keysToDelete.contains(media.getS3Key())) {
-				s3Service.deleteObject(media.getS3Key());
-				post.removePostMedia(media);
-				return true;
-			}
-			return false;
-		});
+		List<PostMedia> mediaToDelete = post.getPostMedias().stream()
+			.filter(media -> keysToDelete.contains(media.getS3Key()))
+			.collect(Collectors.toList());
+
+		// 찾은 항목들을 순회하며 S3 객체 삭제 및 연관관계 제거
+		for (PostMedia media : mediaToDelete) {
+			s3Service.deleteObject(media.getS3Key());
+			post.removePostMedia(media);
+		}
 	}
 
 	@Override
 	@Transactional
 	public void removePostMedia(Post post) {
-		post.getPostMedias().forEach(media -> {
+		// 먼저 컬렉션을 복사해서 안전하게 순회
+		List<PostMedia> mediaToDelete = new ArrayList<>(post.getPostMedias());
+
+		// 복사한 컬렉션을 순회하며 S3 객체 삭제 및 연관관계 제거
+		for (PostMedia media : mediaToDelete) {
 			s3Service.deleteObject(media.getS3Key());
 			post.removePostMedia(media);
-		});
-		post.getPostMedias().clear();
+		}
 	}
 }

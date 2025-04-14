@@ -3,6 +3,7 @@ package seoul.seoulfest.event.service.favorite;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
 import seoul.seoulfest.event.dto.event.response.EventRes;
@@ -25,11 +26,16 @@ public class EventFavoriteServiceImpl implements EventFavoriteService{
 	private final EventRepository eventRepository;
 
 	@Override
+	@Transactional
 	public void createEventFavorite(Long eventId) {
 		Member currentMember = securityUtil.getCurrentMember();
 
 		Event event = eventRepository.findById(eventId)
 			.orElseThrow(() -> new BusinessException(EventErrorCode.NOT_EXIST_EVENT));
+
+		if (eventFavoriteRepository.existsByEventAndMember(event, currentMember)) {
+			throw new BusinessException(EventErrorCode.ALREADY_FAVORITE);
+		}
 
 		EventFavorite eventFavorite = EventFavorite.builder()
 			.member(currentMember)
@@ -42,6 +48,7 @@ public class EventFavoriteServiceImpl implements EventFavoriteService{
 	}
 
 	@Override
+	@Transactional
 	public void removeEventFavorite(Long eventId) {
 		Member currentMember = securityUtil.getCurrentMember();
 

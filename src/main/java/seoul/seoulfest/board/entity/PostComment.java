@@ -50,7 +50,10 @@ public class PostComment extends BaseEntity {
 	@Setter
 	private String content;
 
-	@OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, orphanRemoval = true)
+	@Column(nullable = false)
+	private boolean deleted = false;
+
+	@OneToMany(mappedBy = "parent", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
 	private List<PostComment> replies = new ArrayList<>();
 
 	@Builder
@@ -59,6 +62,7 @@ public class PostComment extends BaseEntity {
 		this.member = member;
 		this.parent = parent;
 		this.content = content;
+		this.deleted = false;
 	}
 
 	// 연관관계 편의 메서드: 자식 댓글 추가
@@ -68,5 +72,14 @@ public class PostComment extends BaseEntity {
 
 	public void removeReply(PostComment reply) {
 		this.replies.remove(reply);
+	}
+
+	public void markAsDeleted() {
+		this.deleted = true;
+	}
+
+	// 댓글 내용 조회 (삭제 여부에 따라 다른 내용 반환)
+	public String getDisplayContent() {
+		return deleted ? "삭제된 댓글입니다." : content;
 	}
 }

@@ -1,6 +1,4 @@
-package seoul.seoulfest.board.dto.comment.response;
-
-import java.util.List;
+package seoul.seoulfest.event.dto.comment.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -11,12 +9,11 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class PostCommentRes {
+public class EventReplyCommentRes {
 	private Long commentId;
-	private Long postId;
-	private String verifyId;
-	private String memberName;
+	private Long eventId;
+	private Long memberId;
 	private String content;
+	private Long parentCommentId;  // 부모 댓글 ID 참조
 	private String createdAt;
-	private List<PostCommentRes> replies;  // 대댓글 리스트
 }

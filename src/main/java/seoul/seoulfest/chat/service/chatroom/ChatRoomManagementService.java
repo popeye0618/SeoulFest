@@ -1,14 +1,21 @@
 package seoul.seoulfest.chat.service.chatroom;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
 
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import seoul.seoulfest.chat.dto.request.chatroom.CreateChatRoomReq;
 import seoul.seoulfest.chat.dto.request.chatroom.KickChatRoomReq;
 import seoul.seoulfest.chat.dto.request.chatroom.UpdateChatRoomReq;
+import seoul.seoulfest.chat.dto.request.chatting.response.ChatMessageResponse;
+import seoul.seoulfest.chat.dto.request.chatting.response.KickUserStatusEvent;
 import seoul.seoulfest.chat.entity.ChatRoom;
 import seoul.seoulfest.chat.entity.ChatRoomMember;
 import seoul.seoulfest.chat.enums.ChatRole;
@@ -24,6 +31,7 @@ import seoul.seoulfest.util.security.SecurityUtil;
  * 채팅방 관리 서비스
  * - 채팅방 생성, 삭제, 수정과 관련된 기능을 담당
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ChatRoomManagementService {
@@ -32,6 +40,12 @@ public class ChatRoomManagementService {
 	private final ChatRoomRepository chatRoomRepository;
 	private final ChatRoomValidator validator;
 	private final ChatRoomMembershipService membershipService;
+
+	private final ObjectProvider<SimpMessagingTemplate> messagingTemplateProvider;
+
+	private SimpMessagingTemplate getMessagingTemplate() {
+		return messagingTemplateProvider.getObject();
+	}
 
 	/**
 	 * 채팅방 생성
@@ -126,9 +140,60 @@ public class ChatRoomManagementService {
 	@Transactional
 	public void kickChatRoomMember(KickChatRoomReq request, String verifyId) {
 		ChatRoom chatRoom = validator.validateAndGetChatRoom(request.getChatRoomId());
+
+		if (request.getVerifyId().equals(verifyId)) {
+			throw new BusinessException(GeneralErrorCode.INVALID_INPUT_VALUE);
+		}
 		validator.validateOwner(chatRoom, verifyId);
-		Member member = securityUtil.getCurrentMember(request.getVerifyId());
-		membershipService.kickChatRoomMember(chatRoom, member);
+		Member kickMember = securityUtil.getCurrentMember(request.getVerifyId());
+		membershipService.kickChatRoomMember(chatRoom, kickMember);
+
+		sendKickEvent(chatRoom.getId(), kickMember);
+
+		sendKickSystemMessage(chatRoom.getId(), kickMember.getUsername());
+	}
+
+	/**
+	 * 강퇴된 사용자에게 개인 이벤트 발송
+	 */
+	private void sendKickEvent(Long chatRoomId, Member kickedMember) {
+		KickUserStatusEvent kickEvent = KickUserStatusEvent.builder()
+			.eventType("KICK")
+			.chatRoomId(chatRoomId)
+			.message("관리자에 의해 강퇴되었습니다.")
+			.timestamp(LocalDateTime.now())
+			.build();
+
+		getMessagingTemplate().convertAndSendToUser(
+			kickedMember.getVerifyId(),  // 강퇴된 사용자의 verifyId
+			"/queue/events",             // 개인 이벤트 큐
+			kickEvent
+		);
+
+		log.info("강퇴 이벤트 발송: 채팅방 {} - 회원 {}", chatRoomId, kickedMember.getVerifyId());
+	}
+
+	/**
+	 * 채팅방에 강퇴 시스템 메시지 발송
+	 */
+	private void sendKickSystemMessage(Long chatRoomId, String kickedUsername) {
+		ChatMessageResponse systemMessage = ChatMessageResponse.builder()
+			.messageId(null)  // 시스템 메시지는 ID 없음
+			.chatRoomId(chatRoomId)
+			.senderId(null)   // 시스템 메시지는 발신자 ID 없음
+			.senderName("SYSTEM")
+			.content(kickedUsername + "님이 강퇴되었습니다.")
+			.type("SYSTEM")
+			.createdAt(LocalDateTime.now())
+			.isDeleted(false)
+			.build();
+
+		getMessagingTemplate().convertAndSend(
+			"/topic/chat/room/" + chatRoomId,
+			systemMessage
+		);
+
+		log.info("강퇴 시스템 메시지 발송: 채팅방 {} - 회원 {}", chatRoomId, kickedUsername);
 	}
 
 	/**

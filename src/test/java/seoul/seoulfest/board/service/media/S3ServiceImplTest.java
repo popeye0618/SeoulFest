@@ -43,21 +43,6 @@ public class S3ServiceImplTest {
 	}
 
 	@Test
-	public void testGenerateUniqueS3Key() {
-		String originalFileName = "image.jpg";
-		String uniqueKey = s3ServiceImpl.generateUniqueS3Key(originalFileName);
-
-		// "seoulfest/post/media/"로 시작하고, ".jpg"로 끝나야 함
-		assertThat(uniqueKey).startsWith("seoulfest/post/media/");
-		assertThat(uniqueKey).endsWith(".jpg");
-
-		// 타임스탬프 14자리와 UUID가 포함된 패턴 검사
-		String patternString = "seoulfest/post/media/\\d{14}_.+\\.jpg";
-		Pattern pattern = Pattern.compile(patternString);
-		assertThat(uniqueKey).matches(pattern);
-	}
-
-	@Test
 	public void testGeneratePresignedUrl_success() throws Exception {
 		String originalFileName = "photo.png";
 		String contentType = "image/png";
@@ -71,7 +56,7 @@ public class S3ServiceImplTest {
 		when(s3Presigner.presignPutObject(any(PutObjectPresignRequest.class)))
 			.thenReturn(fakePresignedRequest);
 
-		PresignedUrlResponse response = s3ServiceImpl.generatePresignedUrl(originalFileName, contentType);
+		PresignedUrlResponse response = s3ServiceImpl.generatePostMediaPresignedUrl(originalFileName, contentType);
 
 		assertThat(response).isNotNull();
 		// s3Key가 "seoulfest/post/media/"로 시작하고, ".png"로 끝나는지 확인

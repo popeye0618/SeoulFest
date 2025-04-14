@@ -1,6 +1,9 @@
 package seoul.seoulfest.board.service.comment;
 
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import org.jsoup.Jsoup;
 import org.jsoup.safety.Safelist;
@@ -35,7 +38,6 @@ public class PostCommentServiceImpl implements PostCommentService {
 	@Override
 	@Transactional
 	public void createComment(PostCommentReq request) {
-
 		Member currentMember = securityUtil.getCurrentMember();
 
 		// 게시글 조회
@@ -46,7 +48,21 @@ public class PostCommentServiceImpl implements PostCommentService {
 		String safeContent = sanitizeContent(request.getContent());
 
 		// 부모 댓글이 있다면 조회, 없으면 null
-		PostComment parentComment = getParentComment(request.getParentCommentId());
+		PostComment parentComment = null;
+		if (request.getParentCommentId() != null) {
+			parentComment = postCommentRepository.findById(request.getParentCommentId())
+				.orElseThrow(() -> new BusinessException(BoardErrorCode.NOT_EXIST_COMMENT));
+
+			// 중요: 대댓글의 대댓글 작성 방지 (1단계 중첩만 허용)
+			if (parentComment.getParent() != null) {
+				throw new BusinessException(BoardErrorCode.NESTED_COMMENT_NOT_ALLOWED);
+			}
+
+			// 부모 댓글이 현재 게시글에 속하는지 검증
+			if (!parentComment.getPost().getId().equals(post.getId())) {
+				throw new BusinessException(BoardErrorCode.PARENT_COMMENT_NOT_BELONG_TO_POST);
+			}
+		}
 
 		// 댓글 생성 (대댓글이면 parent 설정)
 		PostComment newComment = PostComment.builder()
@@ -55,7 +71,6 @@ public class PostCommentServiceImpl implements PostCommentService {
 			.parent(parentComment)
 			.content(safeContent)
 			.build();
-
 
 		if (parentComment != null) {
 			parentComment.addReply(newComment);
@@ -82,50 +97,80 @@ public class PostCommentServiceImpl implements PostCommentService {
 	@Override
 	@Transactional
 	public void deleteComment(Long commentId) {
-
 		PostComment comment = postCommentRepository.findById(commentId)
 			.orElseThrow(() -> new BusinessException(BoardErrorCode.NOT_EXIST_COMMENT));
 
-		PostComment parentComment = getParentComment(commentId);
 		Member currentMember = validateWriter(comment);
 
-		currentMember.removePostComment(comment);
+		// 댓글에 대댓글이 있는지 확인
+		boolean hasReplies = !comment.getReplies().isEmpty();
 
-		if (parentComment != null) {
-			parentComment.removeReply(comment);
+		// 대댓글이 있으면 내용만 "삭제된 댓글입니다"로 변경 (소프트 삭제)
+		if (hasReplies) {
+			comment.markAsDeleted();
 		} else {
-			comment.getPost().removePostComment(comment);
-		}
+			// 대댓글이 없는 경우, 연관관계 정리 후 실제 삭제
+			PostComment parentComment = comment.getParent();
 
-		postCommentRepository.delete(comment);
+			// 부모-자식 관계 정리
+			if (parentComment != null) {
+				parentComment.removeReply(comment);
+				comment.setParent(null);
+			} else {
+				// 최상위 댓글인 경우 게시글에서 제거
+				comment.getPost().removePostComment(comment);
+			}
+
+			// 작성자와의 연관관계 제거
+			currentMember.removePostComment(comment);
+
+			// DB에서 실제 삭제
+			postCommentRepository.delete(comment);
+		}
 	}
 
 	@Override
-	public Page<PostCommentRes> getComments(Long postId, Pageable pageable) {
-		Page<PostComment> commentPage = postCommentRepository.findByPost_Id(postId, pageable);
+	public List<PostCommentRes> getComments(Long postId, Pageable pageable) {
+
+		if (!postRepository.existsById(postId)) {
+			throw new BusinessException(BoardErrorCode.NOT_EXIST_POST);
+		}
+
+		// 게시글의 최상위 댓글만 먼저 조회 (parent가 null인 댓글)
+		List<PostComment> rootComments = postCommentRepository.findByPost_IdAndParentIsNull(postId, pageable);
+
+		// 모든 댓글을 계층 구조로 변환
+		return rootComments.stream()
+			.map(this::convertToCommentResponse)
+			.collect(Collectors.toList());
+	}
+
+	private PostCommentRes convertToCommentResponse(PostComment comment) {
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
-		return commentPage.map(comment -> PostCommentRes.builder()
+		// 하위 댓글들 재귀적으로 변환
+		List<PostCommentRes> childResponses = comment.getReplies().stream()
+			.map(this::convertToCommentResponse)
+			.collect(Collectors.toList());
+
+		LocalDateTime updatedAt = comment.getUpdatedAt();
+		if (updatedAt == null) {
+			updatedAt = comment.getCreatedAt();
+		}
+
+		return PostCommentRes.builder()
 			.commentId(comment.getId())
 			.postId(comment.getPost().getId())
-			.memberId(comment.getMember().getId())
-			.content(comment.getContent())
-			.parentCommentId(comment.getParent() != null ? comment.getParent().getId() : null)
-			.createdAt(comment.getCreatedAt().format(formatter))
-			.build());
+			.verifyId(comment.getMember().getVerifyId())
+			.memberName(comment.getMember().getUsername())
+			.content(comment.isDeleted() ? comment.getDisplayContent() : comment.getContent())
+			.createdAt(updatedAt.format(formatter))
+			.replies(childResponses)  // 대댓글 목록
+			.build();
 	}
 
 	private String sanitizeContent(String content) {
 		return Jsoup.clean(content, Safelist.basic());
-	}
-
-	private PostComment getParentComment(Long commentId) {
-		if (commentId == null) {
-			return null;
-		}
-
-		return postCommentRepository.findById(commentId)
-			.orElseThrow(() -> new BusinessException(BoardErrorCode.NOT_EXIST_COMMENT));
 	}
 
 	private Member validateWriter(PostComment comment) {
