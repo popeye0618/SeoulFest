@@ -28,6 +28,7 @@ import seoul.seoulfest.event.entity.EventFavorite;
 import seoul.seoulfest.event.entity.EventLike;
 import seoul.seoulfest.event.entity.EventSearchHistory;
 import seoul.seoulfest.member.enums.Role;
+import seoul.seoulfest.recommand.entity.AiRecommendation;
 import seoul.seoulfest.util.BaseEntity;
 
 @Entity
@@ -80,6 +81,9 @@ public class Member extends BaseEntity {
 
 	@OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
 	private List<PostLike> postLikes = new ArrayList<>();
+
+	@OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
+	private List<AiRecommendation> recommendations = new ArrayList<>();
 
 	@Builder
 	public Member(String verifyId, String username, String email, Role role, String gender, LocalDate birthDay) {
@@ -168,6 +172,14 @@ public class Member extends BaseEntity {
 	public void removeSearchHistory(EventSearchHistory searchHistory) {
 		eventSearchHistories.remove(searchHistory);
 		searchHistory.setMember(null);
+	}
+
+	public void addRecommendation(AiRecommendation recommendation) {
+		recommendations.add(recommendation);
+	}
+
+	public void removeRecommendation(AiRecommendation recommendation) {
+		eventSearchHistories.remove(recommendation);
 	}
 
 }

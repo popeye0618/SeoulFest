@@ -7,7 +7,7 @@ import seoul.seoulfest.event.dto.batch.response.OpenApiEventListRes.CulturalEven
 import seoul.seoulfest.event.entity.Event;
 
 @Slf4j
-public class MyStepListener implements ItemProcessListener<CulturalEventRow, Event> {
+public class EventStepListener implements ItemProcessListener<CulturalEventRow, Event> {
 
 	@Override
 	public void beforeProcess(CulturalEventRow item) {
@@ -19,6 +19,6 @@ public class MyStepListener implements ItemProcessListener<CulturalEventRow, Eve
 
 	@Override
 	public void onProcessError(CulturalEventRow item, Exception e) {
-		log.error("Error processing item: {}. Exception: {}", item.getTitle(), e.getMessage());
+		log.error("축제 불러오기 Error processing item: {}. Exception: {}", item.getTitle(), e.getMessage());
 	}
 }
