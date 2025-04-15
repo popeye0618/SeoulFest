@@ -21,6 +21,6 @@ public class RecommendStepListener implements ItemProcessListener<AiRecommendRes
 
 	@Override
 	public void onProcessError(AiRecommendRes item, Exception e) {
-		log.error("AI 추천 Error processing item: {}. Exception: {}", item.getUserId(), e.getMessage());
+		log.error("AI 추천 Error processing item: {}. Exception: {}", item.getUserid(), e.getMessage());
 	}
 }

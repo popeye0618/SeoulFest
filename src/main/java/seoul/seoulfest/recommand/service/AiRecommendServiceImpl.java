@@ -1,15 +1,12 @@
 package seoul.seoulfest.recommand.service;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
@@ -29,7 +26,7 @@ import seoul.seoulfest.util.security.SecurityUtil;
 
 @Service
 @RequiredArgsConstructor
-public class AiRecommendServiceImpl implements AiRecommendService{
+public class AiRecommendServiceImpl implements AiRecommendService {
 
 	private final AiRecommendationRepository aiRecommendationRepository;
 	private final EventSearchHistoryRepository eventSearchHistoryRepository;
@@ -114,6 +111,7 @@ public class AiRecommendServiceImpl implements AiRecommendService{
 	 * 검색 기록과 즐겨찾기를 조회하여 추천 요청 DTO 생성
 	 *
 	 * @param memberId 회원 ID
+	 * @param verifyId 회원 검증 ID
 	 * @return 생성된 AI 추천 요청 DTO
 	 */
 	private AiRecommendReq createAiRecommendRequest(Long memberId, String verifyId) {
@@ -125,7 +123,7 @@ public class AiRecommendServiceImpl implements AiRecommendService{
 
 		// 조회한 정보로 DTO 생성 및 반환
 		return AiRecommendReq.builder()
-			.userId(verifyId)
+			.userid(verifyId)  // 필드명을 API 요구사항에 맞춰 소문자로 유지
 			.searchHistory(searchHistories)
 			.favorites(favorites)
 			.build();
@@ -157,6 +155,12 @@ public class AiRecommendServiceImpl implements AiRecommendService{
 			.collect(Collectors.toList());
 	}
 
+	/**
+	 * 이벤트 엔티티를 EventRes DTO로 변환
+	 *
+	 * @param event 이벤트 엔티티
+	 * @return 변환된 EventRes DTO
+	 */
 	private EventRes convertToEventRes(Event event) {
 		return EventRes.builder()
 			.eventId(event.getId())

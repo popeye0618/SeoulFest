@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class AiRecommendReq {
 
-	private String userId;
+	private String userid;
 	private List<String> searchHistory;
 	private List<String> favorites;
 

@@ -10,6 +10,7 @@ import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.util.CollectionUtils;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -42,7 +43,7 @@ public class AiRecommendStepConfig {
 
 	/**
 	 * AI 추천 처리를 위한 태스클릿 정의
-	 * 모든 사용자에 대한 추천 요청 생성 및 ML 서버 호출, 결과 저장 처리
+	 * 모든 사용자에 대한 추천 요청을 일괄적으로 처리
 	 */
 	@Bean
 	public Tasklet processAiRecommendationsTasklet() {
@@ -53,25 +54,37 @@ public class AiRecommendStepConfig {
 			List<AiRecommendReq> requests = aiRecommendService.createAllMembersAiRecommendRequests();
 			log.info("생성된 추천 요청 수: {}", requests.size());
 
-			// 2. 각 요청에 대해 머신러닝 서버에 API 호출 및 결과 저장
-			int successCount = 0;
-			int failCount = 0;
-
-			for (AiRecommendReq request : requests) {
-				try {
-					// 머신러닝 서버에 요청하여 추천 결과 가져오기
-					AiRecommendRes response = mlServerClient.getRecommendations(request);
-
-					// 추천 결과 저장
-					aiRecommendationSaveService.saveRecommendations(response);
-					successCount++;
-				} catch (Exception e) {
-					log.error("사용자 {}의 추천 처리 중 오류 발생: {}", request.getUserId(), e.getMessage());
-					failCount++;
-				}
+			if (CollectionUtils.isEmpty(requests)) {
+				log.info("추천할 사용자가 없습니다.");
+				return RepeatStatus.FINISHED;
 			}
 
-			log.info("AI 추천 처리 완료 - 성공: {}, 실패: {}", successCount, failCount);
+			try {
+				// 2. 모든 요청을 리스트로 한 번에 ML 서버에 전송
+				List<AiRecommendRes> responses = mlServerClient.getRecommendations(requests);
+				log.info("AI 추천 응답 수신: {} 건", responses.size());
+
+				// 3. 응답 결과를 사용자 ID로 매핑하여 저장
+				int successCount = 0;
+				int failCount = 0;
+
+				for (AiRecommendRes response : responses) {
+					try {
+						// 각 응답을 개별적으로 저장
+						aiRecommendationSaveService.saveRecommendations(response);
+						successCount++;
+					} catch (Exception e) {
+						log.error("사용자 {}의 추천 결과 저장 중 오류 발생: {}", response.getUserid(), e.getMessage());
+						failCount++;
+					}
+				}
+
+				log.info("AI 추천 처리 완료 - 성공: {}, 실패: {}", successCount, failCount);
+
+			} catch (Exception e) {
+				log.error("AI 추천 일괄 처리 중 오류 발생: {}", e.getMessage());
+			}
+
 			return RepeatStatus.FINISHED;
 		};
 	}
