@@ -61,8 +61,8 @@ public class MemberController {
 	}
 
 	@GetMapping("/auth/all-user/email/{email}")
-	public ResponseEntity<Response<Void>> checkEmailDup(@PathVariable String email) {
-		memberService.validEmail(email);
+	public ResponseEntity<Response<Void>> checkEmailDup(@AuthenticationPrincipal CustomUserDetails userDetails, @PathVariable String email) {
+		memberService.validEmail(userDetails, email);
 
 		return Response.ok().toResponseEntity();
 	}

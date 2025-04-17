@@ -38,11 +38,11 @@ public class MemberServiceImpl implements MemberService{
 	@Transactional
 	public InputFeatureRes inputFeature(CustomUserDetails userDetails, InputFeatureReq request) {
 
-		validEmail(request.getEmail());
-
 		Member currentMember = securityUtil.getCurrentMember();
 
 		validRoleSemi(currentMember);
+
+		validEmail(userDetails, request.getEmail());
 
 		inputUserInfo(currentMember, request);
 		currentMember.setRole(Role.ROLE_USER);
@@ -73,7 +73,13 @@ public class MemberServiceImpl implements MemberService{
 	}
 
 	@Override
-	public void validEmail(String email) {
+	public void validEmail(CustomUserDetails userDetails, String email) {
+		String currentEmail = userDetails.getEmail();
+		if (currentEmail != null && currentEmail.equals(email)) {
+			return;
+		}
+
+		// 다른 사용자와 이메일 중복 검사
 		if (memberRepository.existsByEmail(email)) {
 			throw new BusinessException(AuthErrorCode.EMAIL_DUPLICATED);
 		}

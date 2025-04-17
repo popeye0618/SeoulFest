@@ -25,5 +25,5 @@ public interface MemberService {
 
 	MemberInfoRes getMemberInfo();
 
-	void validEmail(String email);
+	void validEmail(CustomUserDetails userDetails, String email);
 }
