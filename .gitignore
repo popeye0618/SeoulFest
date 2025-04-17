@@ -1,6 +1,7 @@
 src/main/resources/application*
 .env
-.docker/
+.dockerfile
+docker-compose.yml
 my.cnf
 
 HELP.md
