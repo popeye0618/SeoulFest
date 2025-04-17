@@ -15,6 +15,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import seoul.seoulfest.event.batch.listener.EventJobListener;
+import seoul.seoulfest.event.batch.step.EventSyncStepConfig;
 import seoul.seoulfest.event.batch.step.FaultTolerantEventStepConfig;
 import seoul.seoulfest.recommand.batch.listener.RecommendJobListener;
 
@@ -30,6 +31,7 @@ public class BatchConfig {
 	private final Step processApiEventsStep;
 	private final Step updateMissingEventsStep;
 	private final Step processAiRecommendationsStep;
+	private final EventSyncStepConfig eventSyncStepConfig;
 
 	@Bean
 	public Job eventSyncJob() {
@@ -52,7 +54,14 @@ public class BatchConfig {
 			.build();
 	}
 
-	@Scheduled(cron = "0 0 0 * * ?", zone = "Asia/Seoul")
+	@Bean
+	public Job eventDataSyncJob() {
+		return new JobBuilder("eventDataSyncJob", jobRepository)
+			.start(eventSyncStepConfig.eventSyncStep())
+			.build();
+	}
+
+	@Scheduled(cron = "0 0 22 * * ?", zone = "Asia/Seoul")
 	public void performEventSyncJob() throws Exception {
 		JobParameters jobParameters = new JobParametersBuilder()
 			.addLong("time", System.currentTimeMillis())
@@ -60,7 +69,7 @@ public class BatchConfig {
 		jobLauncher.run(eventSyncJob(), jobParameters);
 	}
 
-	@Scheduled(cron = "0 0 22 * * ?", zone = "Asia/Seoul")
+	@Scheduled(cron = "0 0 0 * * ?", zone = "Asia/Seoul")
 	public void performAiRecommendationJob() throws Exception {
 		try {
 			JobParameters jobParameters = new JobParametersBuilder()
@@ -71,6 +80,19 @@ public class BatchConfig {
 			log.info("AI 추천 배치 작업이 성공적으로 실행되었습니다.");
 		} catch (Exception e) {
 			log.error("AI 추천 배치 작업 실행 중 오류 발생: {}", e.getMessage(), e);
+		}
+	}
+
+	@Scheduled(cron = "0 0 23 * * ?", zone = "Asia/Seoul")
+	public void performEventDataSyncJob() throws Exception {
+		try {
+			JobParameters jobParameters = new JobParametersBuilder()
+				.addLong("time", System.currentTimeMillis())
+				.toJobParameters();
+			jobLauncher.run(eventDataSyncJob(), jobParameters);
+			log.info("이벤트 데이터 동기화 배치 작업이 성공적으로 실행되었습니다.");
+		} catch (Exception e) {
+			log.error("이벤트 데이터 동기화 배치 작업 실행 중 오류 발생: {}", e.getMessage(), e);
 		}
 	}
 }
