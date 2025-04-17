@@ -1,6 +1,6 @@
 src/main/resources/application*
 .env
-.dockerfile
+dockerfile
 docker-compose.yml
 my.cnf
 
