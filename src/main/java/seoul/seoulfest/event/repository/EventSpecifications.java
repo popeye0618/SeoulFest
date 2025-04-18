@@ -1,6 +1,11 @@
 package seoul.seoulfest.event.repository;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
 import org.springframework.data.jpa.domain.Specification;
+
+import jakarta.persistence.criteria.Expression;
 import seoul.seoulfest.event.entity.Event;
 import seoul.seoulfest.event.enums.Status;
 
@@ -48,5 +53,47 @@ public class EventSpecifications {
 		return (root, query, criteriaBuilder) ->
 			criteriaBuilder.like(criteriaBuilder.lower(root.get("title")),
 				"%" + keyword.toLowerCase() + "%");
+	}
+
+	/**
+	 * 이벤트 기간이 주어진 날짜 범위와 겹치는지 확인하는 명세 생성
+	 * LocalDate를 사용하여 날짜만 비교 (시간 정보 무시)
+	 *
+	 * @param startDate 검색 시작 날짜
+	 * @param endDate 검색 종료 날짜
+	 * @return 생성된 명세
+	 */
+	public static Specification<Event> dateRangeOverlaps(LocalDate startDate, LocalDate endDate) {
+		return (root, query, criteriaBuilder) -> {
+			if (startDate == null && endDate == null) {
+				return criteriaBuilder.conjunction();
+			}
+
+			// startDate를 LocalDateTime의 시작 시간(00:00:00)으로 변환
+			Expression<LocalDateTime> eventStartDate = root.get("startDate");
+			Expression<LocalDateTime> eventEndDate = root.get("endDate");
+
+			// 시작일만 존재하는 경우: 이벤트 종료일 >= 검색 시작일
+			if (startDate != null && endDate == null) {
+				LocalDateTime startOfDay = startDate.atStartOfDay();
+				return criteriaBuilder.greaterThanOrEqualTo(eventEndDate, startOfDay);
+			}
+
+			// 종료일만 존재하는 경우: 이벤트 시작일 <= 검색 종료일의 끝
+			if (startDate == null && endDate != null) {
+				LocalDateTime endOfDay = endDate.atTime(23, 59, 59);
+				return criteriaBuilder.lessThanOrEqualTo(eventStartDate, endOfDay);
+			}
+
+			// 두 날짜 범위가 겹치는 조건:
+			// (이벤트 시작일 <= 검색 종료일의 끝) AND (이벤트 종료일 >= 검색 시작일의 시작)
+			LocalDateTime startOfDay = startDate.atStartOfDay();
+			LocalDateTime endOfDay = endDate.atTime(23, 59, 59);
+
+			return criteriaBuilder.and(
+				criteriaBuilder.lessThanOrEqualTo(eventStartDate, endOfDay),
+				criteriaBuilder.greaterThanOrEqualTo(eventEndDate, startOfDay)
+			);
+		};
 	}
 }

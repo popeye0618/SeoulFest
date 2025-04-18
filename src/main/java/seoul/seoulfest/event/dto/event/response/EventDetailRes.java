@@ -30,6 +30,8 @@ public class EventDetailRes {
 	private LocalDate startDate;
 	private LocalDate endDate;
 	private String isFree;
+	private String lot;
+	private String lat;
 	private int likes;
 	private int favorites;
 	private int comments;

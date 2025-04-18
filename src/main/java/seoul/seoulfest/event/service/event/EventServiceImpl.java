@@ -75,6 +75,11 @@ public class EventServiceImpl implements EventService {
 			spec = spec.and(EventSpecifications.hasGuName(condition.getGuName()));
 		}
 
+		// 날짜 범위 필터
+		if (condition.hasDateCondition()) {
+			spec = spec.and(EventSpecifications.dateRangeOverlaps(condition.getStartDate(), condition.getEndDate()));
+		}
+
 		// 제목 검색
 		if (condition.hasTitleKeyword()) {
 
@@ -106,6 +111,9 @@ public class EventServiceImpl implements EventService {
 			.guName(event.getGuName())
 			.isFree(event.getIsFree())
 			.status(event.getStatus().toString())
+			.startDate(event.getStartDate())
+			.endDate(event.getEndDate())
+			.mainImg(event.getMainImg())
 			.likes(event.getLikes())
 			.favorites(event.getFavorites())
 			.comments(event.getComments())
@@ -135,6 +143,8 @@ public class EventServiceImpl implements EventService {
 			.startDate(event.getStartDate())
 			.endDate(event.getEndDate())
 			.isFree(event.getIsFree())
+			.lat(event.getLat())
+			.lot(event.getLot())
 			.likes(event.getLikes())
 			.favorites(event.getFavorites())
 			.comments(event.getComments())
