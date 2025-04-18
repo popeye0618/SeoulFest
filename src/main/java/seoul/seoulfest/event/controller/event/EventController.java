@@ -1,9 +1,12 @@
 package seoul.seoulfest.event.controller.event;
 
+import java.time.LocalDate;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -33,16 +36,20 @@ public class EventController {
 		@RequestParam(value = "category", required = false) String codename,
 		@RequestParam(value = "guName", required = false) String guName,
 		@RequestParam(value = "title", required = false) String title,
+		@RequestParam(value = "startDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+		@RequestParam(value = "endDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
 		@RequestParam(name = "page", defaultValue = "1") int page,
 		@RequestParam(name = "size", defaultValue = "10") int size) {
 
-		Pageable pageable = PageRequest.of(page - 1, size, Sort.by("startDate").descending());
+		Pageable pageable = PageRequest.of(page - 1, size, Sort.by("startDate").ascending());
 
 		EventSearchCondition condition = EventSearchCondition.builder()
 			.status(status)
 			.isFree(isFree)
 			.codename(codename)
 			.guName(guName)
+			.startDate(startDate)
+			.endDate(endDate)
 			.title(title)
 			.build();
 

@@ -1,13 +1,8 @@
 package seoul.seoulfest.parking.component;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.web.util.UriComponentsBuilder;
-
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,8 +17,11 @@ public class ParkingApiClient {
 
 	private final RestTemplate restTemplate;
 
-	@Value("${open-api.parking.key}")
-	private String key;
+	@Value("${open-api.parking.si-key}")
+	private String si_key;
+
+	@Value("${open-api.parking.go-key}")
+	private String go_key;
 
 	/**
 	 * 특정 구의 주차장 정보를 API에서 조회
@@ -35,7 +33,7 @@ public class ParkingApiClient {
 		try {
 			log.info("주차장 API 호출: {}", guName);
 
-			String baseUrl = "http://openapi.seoul.go.kr:8088/" + key + "/json/GetParkingInfo/1/1000/";
+			String baseUrl = "http://openapi.seoul.go.kr:8088/" + si_key + "/json/GetParkingInfo/1/1000/";
 			String url = baseUrl + guName;
 
 			// API 호출
