@@ -97,6 +97,8 @@ public class Event extends BaseEntity {
 
 	private String portal;
 
+	private double rating = 0;
+
 	@OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
 	private List<EventComment> eventComments = new ArrayList<>();
 
@@ -108,6 +110,9 @@ public class Event extends BaseEntity {
 
 	@OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
 	private List<AiRecommendation> recommendations = new ArrayList<>();
+
+	@OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
+	private List<EventReview> eventReviews = new ArrayList<>();
 
 	@Builder
 	public Event(Status status, String codename, String guName, String title, LocalDateTime eventDateTime, String place,
@@ -176,5 +181,33 @@ public class Event extends BaseEntity {
 	public void removeEventFavorite(EventFavorite eventFavorite) {
 		this.eventFavorites.remove(eventFavorite);
 		eventFavorite.setMember(null);
+	}
+
+	public void addEventReview(EventReview eventReview) {
+		this.eventReviews.add(eventReview);
+		addRating(eventReview.getRating());
+	}
+
+	public void removeEventReview(EventReview eventReview) {
+		this.eventReviews.remove(eventReview);
+		removeRating(eventReview.getRating());
+		eventReview.setEvent(null);
+	}
+
+	public void addRating(double newRating) {
+		double totalRating = this.rating * (eventReviews.size() - 1) + newRating;
+		double avgRating = totalRating / eventReviews.size();
+		this.rating = Math.round(avgRating * 2) / 2.0; // 0.5 단위로 반올림
+	}
+
+	public void removeRating(double oldRating) {
+		if (eventReviews.size() <= 1) {
+			this.rating = 0;
+			return;
+		}
+
+		double totalRating = this.rating * eventReviews.size() - oldRating;
+		double avgRating = totalRating / (eventReviews.size() - 1);
+		this.rating = Math.round(avgRating * 2) / 2.0; // 0.5 단위로 반올림
 	}
 }

@@ -122,6 +122,37 @@ public class S3ServiceImpl implements S3Service {
 			.build();
 	}
 
+	@Override
+	public PresignedUrlResponse generateReviewMediaPresignedUrl(String originalFileName, String contentType) {
+
+		String extension = getExtensionFromContentType(contentType);
+
+		// 고유한 s3Key 생성 (예: "seoulfest/review/media/20250402123045_uniqueId.jpg")
+		String objectKey = generateReviewUniqueS3KeyWithExtension(originalFileName, extension);
+
+		// S3에 업로드할 객체의 요청 객체 생성
+		PutObjectRequest objectRequest = PutObjectRequest.builder()
+			.bucket(bucketName)
+			.key(objectKey)
+			.contentType(contentType)
+			.build();
+
+		// pre-signed URL 요청 생성 (유효기간 15분)
+		PutObjectPresignRequest presignRequest = PutObjectPresignRequest.builder()
+			.signatureDuration(Duration.ofMinutes(15))
+			.putObjectRequest(objectRequest)
+			.build();
+
+		// pre-signed URL 생성 및 문자열로 반환
+		String presignedUrl = s3Presigner.presignPutObject(presignRequest).url().toString();
+
+		// 생성된 s3Key와 pre-signed URL을 함께 반환
+		return PresignedUrlResponse.builder()
+			.s3Key(objectKey)
+			.presignedUrl(presignedUrl)
+			.build();
+	}
+
 	private String generatePostUniqueS3KeyWithExtension(String originalFileName, String extension) {
 		String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
 		String uniqueId = UUID.randomUUID().toString();
@@ -132,6 +163,12 @@ public class S3ServiceImpl implements S3Service {
 		String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
 		String uniqueId = UUID.randomUUID().toString();
 		return "seoulfest/chat/media/" + timestamp + "_" + uniqueId + extension;
+	}
+
+	private String generateReviewUniqueS3KeyWithExtension(String originalFileName, String extension) {
+		String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
+		String uniqueId = UUID.randomUUID().toString();
+		return "seoulfest/review/media/" + timestamp + "_" + uniqueId + extension;
 	}
 
 	@Override

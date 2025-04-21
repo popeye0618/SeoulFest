@@ -114,9 +114,11 @@ public class EventServiceImpl implements EventService {
 			.startDate(event.getStartDate())
 			.endDate(event.getEndDate())
 			.mainImg(event.getMainImg())
+			.rating(event.getRating())
 			.likes(event.getLikes())
 			.favorites(event.getFavorites())
 			.comments(event.getComments())
+			.ratingCount(event.getEventReviews().size())
 			.build();
 	}
 

@@ -37,4 +37,14 @@ public class S3Controller {
 
 		return Response.ok(presignedUrlResponse).toResponseEntity();
 	}
+
+	@GetMapping("/review/presigned")
+	public ResponseEntity<Response<PresignedUrlResponse>> generateReviewPresignedUrl(
+		@RequestParam String originalFileName,
+		@RequestParam String contentType) {
+
+		PresignedUrlResponse presignedUrlResponse = s3Service.generateReviewMediaPresignedUrl(originalFileName, contentType);
+
+		return Response.ok(presignedUrlResponse).toResponseEntity();
+	}
 }
