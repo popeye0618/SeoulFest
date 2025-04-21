@@ -25,4 +25,6 @@ public class EventRes {
 	private int likes;
 	private int favorites;
 	private int comments;
+	private double rating;
+	private int ratingCount;
 }
